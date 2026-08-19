@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { errorMessage } from '@/lib/api-error'
 
 async function fetchSettings(): Promise<{ rsdToEurRate: number }> {
   const response = await fetch('/api/settings')
@@ -32,7 +33,7 @@ export default function SettingsPage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(body.error ?? 'Greška pri čuvanju kursa')
+      alert(errorMessage(body, 'Greška pri čuvanju kursa'))
       return
     }
     setSaved(true)
@@ -51,6 +52,7 @@ export default function SettingsPage() {
             id="rate"
             type="number"
             step="0.0001"
+            min="0.0001"
             value={rate}
             onChange={(event) => setRate(event.target.value)}
             className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"

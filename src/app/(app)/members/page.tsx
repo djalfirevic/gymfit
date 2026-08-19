@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Table } from '@/components/ui/Table'
+import { errorMessage } from '@/lib/api-error'
 import { toDateKey } from '@/lib/dates'
 
 type Member = { id: number; fullName: string; membershipRenewalDate: string }
@@ -60,7 +61,7 @@ export default function MembersPage() {
         })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(body.error ?? 'Greška pri čuvanju člana')
+      alert(errorMessage(body, 'Greška pri čuvanju člana'))
       return
     }
     setModalOpen(false)

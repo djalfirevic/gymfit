@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Table } from '@/components/ui/Table'
+import { errorMessage } from '@/lib/api-error'
 import { formatRsd } from '@/lib/currency'
 
 type Payment = { id: number; memberId: number | null; memberNameRaw: string; paidAt: string; amount: string }
@@ -48,7 +49,7 @@ export default function PaymentsPage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(body.error ?? 'Greška pri čuvanju uplate')
+      alert(errorMessage(body, 'Greška pri čuvanju uplate'))
       return
     }
     setModalOpen(false)
@@ -67,7 +68,7 @@ export default function PaymentsPage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(body.error ?? 'Greška pri povezivanju uplate')
+      alert(errorMessage(body, 'Greška pri povezivanju uplate'))
       return
     }
     setRelinking(null)

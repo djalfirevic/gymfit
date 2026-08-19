@@ -37,7 +37,7 @@ Docker Compose port mapping, update `.env.local` to match.
 | Variable | Needed for |
 |---|---|
 | `DATABASE_URL` | Postgres connection string. Docker Compose's default is already in `.env.example`. |
-| `APP_PASSWORD` | The shared password for the app. |
+| `APP_PASSWORD` | The shared password for the app. Use a long, random value — e.g. generate one with `openssl rand -base64 24` — since this is the only credential gating the whole app. |
 | `SESSION_SECRET` | Signs the session cookie. 32+ random bytes — generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. |
 
 ## Seeding from the spreadsheet export

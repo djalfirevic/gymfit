@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Table } from '@/components/ui/Table'
+import { errorMessage } from '@/lib/api-error'
 import { formatRsd } from '@/lib/currency'
 
 type Product = { id: number; name: string; defaultPrice: string; active: boolean }
@@ -48,7 +49,7 @@ export default function StorePage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(body.error ?? 'Greška pri čuvanju proizvoda')
+      alert(errorMessage(body, 'Greška pri čuvanju proizvoda'))
       return
     }
     setProductModalOpen(false)
@@ -71,7 +72,7 @@ export default function StorePage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(body.error ?? 'Greška pri čuvanju prodaje')
+      alert(errorMessage(body, 'Greška pri čuvanju prodaje'))
       return
     }
     setSaleModalOpen(false)

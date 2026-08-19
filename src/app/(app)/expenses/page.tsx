@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Table } from '@/components/ui/Table'
+import { errorMessage } from '@/lib/api-error'
 import { formatRsd } from '@/lib/currency'
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/expenses/categorize'
 
@@ -75,7 +76,7 @@ export default function ExpensesPage() {
         })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(body.error ?? 'Greška pri čuvanju troška')
+      alert(errorMessage(body, 'Greška pri čuvanju troška'))
       return
     }
     setModalOpen(false)

@@ -7,6 +7,7 @@ import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { StatCard } from '@/components/ui/StatCard'
 import { Table } from '@/components/ui/Table'
+import { errorMessage } from '@/lib/api-error'
 import { formatEur, formatRsd } from '@/lib/currency'
 
 type CapitalInvestment = { id: number; investedAt: string; amountEur: string; note: string | null }
@@ -52,7 +53,7 @@ export default function InvestmentsPage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(body.error ?? 'Greška pri čuvanju ulaganja')
+      alert(errorMessage(body, 'Greška pri čuvanju ulaganja'))
       return
     }
     setModalOpen(false)

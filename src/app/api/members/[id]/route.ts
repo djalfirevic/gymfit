@@ -20,8 +20,29 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   return NextResponse.json(member)
 }
 
+function isForeignKeyViolation(error: unknown): boolean {
+  let current = error
+  for (let depth = 0; depth < 5 && current; depth += 1) {
+    if (typeof current === 'object' && 'code' in current && current.code === '23503') {
+      return true
+    }
+    current = current instanceof Error ? current.cause : undefined
+  }
+  return false
+}
+
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  await deleteMember(Number(id))
+  try {
+    await deleteMember(Number(id))
+  } catch (error) {
+    if (isForeignKeyViolation(error)) {
+      return NextResponse.json(
+        { error: 'Član ima povezane uplate i ne može biti obrisan' },
+        { status: 409 },
+      )
+    }
+    throw error
+  }
   return NextResponse.json({ ok: true })
 }
