@@ -19,6 +19,17 @@ function toBase64Url(bytes: ArrayBuffer): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
+export function timingSafeEqual(a: string, b: string): boolean {
+  const maxLength = Math.max(a.length, b.length)
+  let mismatch = a.length === b.length ? 0 : 1
+  for (let i = 0; i < maxLength; i++) {
+    const charA = i < a.length ? a.charCodeAt(i) : 0
+    const charB = i < b.length ? b.charCodeAt(i) : 0
+    mismatch |= charA ^ charB
+  }
+  return mismatch === 0
+}
+
 export async function createSessionToken(issuedAtMs: number = Date.now()): Promise<string> {
   const payload = `session.${issuedAtMs}`
   const key = await importKey()
@@ -37,5 +48,5 @@ export async function verifySessionToken(token: string | undefined | null): Prom
   const ageSeconds = (Date.now() - issuedAtMs) / 1000
   if (ageSeconds < 0 || ageSeconds > SESSION_MAX_AGE) return false
   const expected = await createSessionToken(issuedAtMs)
-  return expected === token
+  return timingSafeEqual(expected, token)
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createSessionToken, verifySessionToken } from './session'
+import { createSessionToken, timingSafeEqual, verifySessionToken } from './session'
 
 describe('session tokens', () => {
   beforeEach(() => {
@@ -30,5 +30,19 @@ describe('session tokens', () => {
 
   it('rejects a malformed token', async () => {
     expect(await verifySessionToken('not-a-token')).toBe(false)
+  })
+})
+
+describe('timingSafeEqual', () => {
+  it('returns true for equal strings', () => {
+    expect(timingSafeEqual('secret-value', 'secret-value')).toBe(true)
+  })
+
+  it('returns false for different strings of the same length', () => {
+    expect(timingSafeEqual('secret-value', 'secret-valuf')).toBe(false)
+  })
+
+  it('returns false for strings of different lengths', () => {
+    expect(timingSafeEqual('short', 'much-longer-string')).toBe(false)
   })
 })

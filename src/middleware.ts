@@ -9,7 +9,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value
-  if (await verifySessionToken(token)) {
+  let authenticated = false
+  try {
+    authenticated = await verifySessionToken(token)
+  } catch {
+    authenticated = false
+  }
+  if (authenticated) {
     return NextResponse.next()
   }
   if (pathname.startsWith('/api/')) {
