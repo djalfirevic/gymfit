@@ -3709,11 +3709,19 @@ async function fetchDashboard(year: number) {
   return response.json() as Promise<{ yearlyTotals: { ukupnaZaradaEur: number; zaradaEur: number } }>
 }
 
+async function fetchSettings(): Promise<{ rsdToEurRate: number }> {
+  const response = await fetch('/api/settings')
+  if (!response.ok) throw new Error('Failed to load settings')
+  return response.json()
+}
+
 export default function InvestmentsPage() {
   const queryClient = useQueryClient()
   const { data: investments, isLoading } = useQuery({ queryKey: ['investments'], queryFn: fetchInvestments })
   const currentYear = new Date().getFullYear()
   const { data: dashboard } = useQuery({ queryKey: ['dashboard', currentYear], queryFn: () => fetchDashboard(currentYear) })
+  const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: fetchSettings })
+  const rate = settings?.rsdToEurRate
 
   const [modalOpen, setModalOpen] = useState(false)
   const [investedAt, setInvestedAt] = useState('')
@@ -3750,12 +3758,21 @@ export default function InvestmentsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <StatCard label="Uloženo" value={formatEur(investments?.totalInvestedEur ?? 0)} />
+        <StatCard
+          label="Uloženo"
+          value={formatEur(investments?.totalInvestedEur ?? 0)}
+          hint={rate ? formatRsd((investments?.totalInvestedEur ?? 0) * rate) : undefined}
+        />
         <StatCard
           label={`Ukupna zarada (${currentYear})`}
           value={dashboard ? formatEur(dashboard.yearlyTotals.ukupnaZaradaEur) : '—'}
+          hint={dashboard && rate ? formatRsd(dashboard.yearlyTotals.ukupnaZaradaEur * rate) : undefined}
         />
-        <StatCard label={`Zarada (${currentYear})`} value={dashboard ? formatEur(dashboard.yearlyTotals.zaradaEur) : '—'} />
+        <StatCard
+          label={`Zarada (${currentYear})`}
+          value={dashboard ? formatEur(dashboard.yearlyTotals.zaradaEur) : '—'}
+          hint={dashboard && rate ? formatRsd(dashboard.yearlyTotals.zaradaEur * rate) : undefined}
+        />
       </div>
 
       <Table<CapitalInvestment>
