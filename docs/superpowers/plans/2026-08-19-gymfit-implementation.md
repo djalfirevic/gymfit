@@ -3301,11 +3301,14 @@ export default function StorePage() {
   if (productsLoading || salesLoading) return <p className="text-neutral-400">Učitavanje...</p>
 
   const productById = new Map((products ?? []).map((product) => [product.id, product]))
-  const chartData = (sales ?? []).map((sale) => ({
-    productName: productById.get(sale.productId)?.name ?? '?',
-    soldAt: sale.soldAt,
-    quantity: sale.quantity,
-  }))
+  const currentYear = new Date().getFullYear()
+  const chartData = (sales ?? [])
+    .filter((sale) => new Date(sale.soldAt).getFullYear() === currentYear)
+    .map((sale) => ({
+      productName: productById.get(sale.productId)?.name ?? '?',
+      soldAt: sale.soldAt,
+      quantity: sale.quantity,
+    }))
 
   return (
     <div className="flex flex-col gap-8">
@@ -3314,7 +3317,7 @@ export default function StorePage() {
       </div>
 
       <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Prodaja po proizvodu i mesecu</h2>
+        <h2 className="mb-4 text-lg font-semibold text-white">Prodaja po proizvodu i mesecu ({currentYear})</h2>
         <ProductCountsChart data={chartData} />
       </div>
 
