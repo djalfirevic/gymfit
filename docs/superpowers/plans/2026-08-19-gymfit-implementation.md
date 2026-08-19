@@ -983,6 +983,15 @@ describe('memberStatus', () => {
     expect(memberStatus(new Date('2026-08-18'), today)).toBe('not_renewed')
     expect(memberStatus(new Date('2024-01-01'), today)).toBe('not_renewed')
   })
+
+  it('compares by calendar day, not time-of-day', () => {
+    // Postgres `date` columns round-trip as UTC midnight; `today` defaults to
+    // the real current instant, which is virtually never midnight. A renewal
+    // date on today's calendar day must still count as active even though
+    // its Date object is numerically earlier than "right now".
+    const todayAtNoon = new Date('2026-08-19T12:00:00Z')
+    expect(memberStatus(new Date('2026-08-19T00:00:00Z'), todayAtNoon)).toBe('active')
+  })
 })
 ```
 
@@ -1002,8 +1011,12 @@ import { members } from '@/lib/db/schema'
 
 export type Member = typeof members.$inferSelect
 
+function toDateKey(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
+}
+
 export function memberStatus(renewalDate: Date, today: Date = new Date()): 'active' | 'not_renewed' {
-  return renewalDate.getTime() >= today.getTime() ? 'active' : 'not_renewed'
+  return toDateKey(renewalDate) >= toDateKey(today) ? 'active' : 'not_renewed'
 }
 
 export async function listMembers(): Promise<Member[]> {
