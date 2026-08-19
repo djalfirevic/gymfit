@@ -5,8 +5,12 @@ import { members } from '@/lib/db/schema'
 
 export type Member = typeof members.$inferSelect
 
+function toDateKey(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
+}
+
 export function memberStatus(renewalDate: Date, today: Date = new Date()): 'active' | 'not_renewed' {
-  return renewalDate.getTime() >= today.getTime() ? 'active' : 'not_renewed'
+  return toDateKey(renewalDate) >= toDateKey(today) ? 'active' : 'not_renewed'
 }
 
 export async function listMembers(): Promise<Member[]> {

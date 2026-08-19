@@ -13,4 +13,9 @@ describe('memberStatus', () => {
     expect(memberStatus(new Date('2026-08-18'), today)).toBe('not_renewed')
     expect(memberStatus(new Date('2024-01-01'), today)).toBe('not_renewed')
   })
+
+  it('compares by calendar day, not time-of-day', () => {
+    const todayAtNoon = new Date('2026-08-19T12:00:00Z')
+    expect(memberStatus(new Date('2026-08-19T00:00:00Z'), todayAtNoon)).toBe('active')
+  })
 })
