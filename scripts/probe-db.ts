@@ -1,15 +1,6 @@
 import 'dotenv/config'
-import { drizzle } from 'drizzle-orm/postgres-js'
-import postgres from 'postgres'
+import { db } from './db-client'
 import { capitalInvestments, expenses, members, payments, settings, storeProducts, storeSales } from '../src/lib/db/schema'
-
-const connectionString = process.env.DATABASE_URL
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not set')
-}
-
-const queryClient = postgres(connectionString)
-const db = drizzle(queryClient, { schema: { capitalInvestments, expenses, members, payments, settings, storeProducts, storeSales } })
 
 async function main() {
   const [memberCount] = await db.select().from(members)
