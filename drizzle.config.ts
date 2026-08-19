@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import './scripts/load-env'
 import { defineConfig } from 'drizzle-kit'
 
 const connectionString = process.env.DATABASE_URL

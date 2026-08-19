@@ -1,5 +1,5 @@
 // scripts/seed-import.ts
-import 'dotenv/config'
+import './load-env'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parse } from 'csv-parse/sync'
@@ -50,6 +50,7 @@ async function importPayments(dir: string): Promise<void> {
   const rows = readCsv(resolve(dir, 'Payments.csv'))
   const roster = await db.select({ id: members.id, fullName: members.fullName }).from(members)
   const unmatched: string[] = []
+  let inserted = 0
   await db.transaction(async (tx) => {
     for (const row of rows) {
       const memberNameRaw = row['Član']
@@ -64,9 +65,10 @@ async function importPayments(dir: string): Promise<void> {
         paidAt: parseSerbianDate(dateRaw),
         amount: amountRaw,
       })
+      inserted++
     }
   })
-  console.log(`Payments: inserted ${rows.length} rows.`)
+  console.log(`Payments: inserted ${inserted} of ${rows.length} CSV rows (the rest were blank).`)
   if (unmatched.length > 0) {
     const distinct = [...new Set(unmatched)]
     console.log(`Payments: ${unmatched.length} rows (${distinct.length} distinct names) did not match a member:`)

@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import './load-env'
 import { db } from './db-client'
 import { capitalInvestments, expenses, members, payments, settings, storeProducts, storeSales } from '../src/lib/db/schema'
 
