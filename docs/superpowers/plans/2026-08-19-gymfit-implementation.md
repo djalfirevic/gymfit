@@ -477,13 +477,34 @@ Expected: creates `drizzle/0000_*.sql` covering all 7 tables and the `expense_ca
 Run: `pnpm db:migrate`
 Expected: exits 0, applies the migration.
 
-- [ ] **Step 5: Write and run the DB probe script**
+- [ ] **Step 5: Write `scripts/load-env.ts`, then the DB probe script**
+
+Any script that imports `./db-client` needs `.env.local` loaded before `db-client`'s own top-level `DATABASE_URL` check runs. Under native ESM, a module's whole import graph evaluates before that module's own top-level statements — so `config(...)` calls placed textually above an `import { db } from './db-client'` line do NOT run first; only the relative order of sibling `import` *statements* does. `scripts/load-env.ts` is a side-effecting module every such script imports first:
+
+```ts
+// scripts/load-env.ts
+import { config } from 'dotenv'
+
+// dotenv's auto-load form only reads `.env`, not `.env.local` — but
+// `.env.local` is what developers actually create. Load both, `.env.local`
+// taking precedence, so CLI scripts see the same DATABASE_URL that Next.js
+// and Vitest see.
+//
+// This must be the FIRST import in any file that also imports `./db-client`
+// (directly or transitively): under native ESM, a module's entire
+// dependency graph is evaluated before that module's own top-level
+// statements run, so placing these `config(...)` calls textually above an
+// `import './db-client'` line does not delay db-client's evaluation — only
+// the relative order of sibling import statements does. Importing this
+// module first guarantees it fully evaluates (including these calls)
+// before `./db-client` is evaluated.
+config({ path: '.env', quiet: true })
+config({ path: '.env.local', override: true, quiet: true })
+```
 
 ```ts
 // scripts/probe-db.ts
-import { config } from 'dotenv'
-config({ path: '.env', quiet: true })
-config({ path: '.env.local', override: true, quiet: true })
+import './load-env'
 import { db } from './db-client'
 import { capitalInvestments, expenses, members, payments, settings, storeProducts, storeSales } from '../src/lib/db/schema'
 
@@ -2038,9 +2059,7 @@ git commit -m "feat: add settings, investments, and dashboard rollup backend"
 
 ```ts
 // scripts/seed-import.ts
-import { config } from 'dotenv'
-config({ path: '.env', quiet: true })
-config({ path: '.env.local', override: true, quiet: true })
+import './load-env'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parse } from 'csv-parse/sync'
