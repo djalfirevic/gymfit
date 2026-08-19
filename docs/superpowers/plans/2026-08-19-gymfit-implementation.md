@@ -437,8 +437,15 @@ export const db = drizzle(queryClient, { schema })
 
 ```ts
 // drizzle.config.ts
-import 'dotenv/config'
+import { config } from 'dotenv'
 import { defineConfig } from 'drizzle-kit'
+
+// dotenv's auto-load form (`import 'dotenv/config'`) only reads `.env`, not
+// `.env.local` — but `.env.local` is what Step 4 below has developers
+// actually create. Load both, `.env.local` taking precedence, so this CLI
+// config sees the same DATABASE_URL Next.js and Vitest see.
+config({ path: '.env', quiet: true })
+config({ path: '.env.local', override: true, quiet: true })
 
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) {
@@ -474,8 +481,10 @@ Expected: exits 0, applies the migration.
 
 ```ts
 // scripts/probe-db.ts
-import 'dotenv/config'
-import { db } from '../src/lib/db/client'
+import { config } from 'dotenv'
+config({ path: '.env', quiet: true })
+config({ path: '.env.local', override: true, quiet: true })
+import { db } from './db-client'
 import { capitalInvestments, expenses, members, payments, settings, storeProducts, storeSales } from '../src/lib/db/schema'
 
 async function main() {
@@ -2029,7 +2038,9 @@ git commit -m "feat: add settings, investments, and dashboard rollup backend"
 
 ```ts
 // scripts/seed-import.ts
-import 'dotenv/config'
+import { config } from 'dotenv'
+config({ path: '.env', quiet: true })
+config({ path: '.env.local', override: true, quiet: true })
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parse } from 'csv-parse/sync'
@@ -2080,6 +2091,7 @@ async function importPayments(dir: string): Promise<void> {
   const rows = readCsv(resolve(dir, 'Payments.csv'))
   const roster = await db.select({ id: members.id, fullName: members.fullName }).from(members)
   const unmatched: string[] = []
+  let inserted = 0
   await db.transaction(async (tx) => {
     for (const row of rows) {
       const memberNameRaw = row['Član']
@@ -2094,9 +2106,10 @@ async function importPayments(dir: string): Promise<void> {
         paidAt: parseSerbianDate(dateRaw),
         amount: amountRaw,
       })
+      inserted++
     }
   })
-  console.log(`Payments: inserted ${rows.length} rows.`)
+  console.log(`Payments: inserted ${inserted} of ${rows.length} CSV rows (the rest were blank).`)
   if (unmatched.length > 0) {
     const distinct = [...new Set(unmatched)]
     console.log(`Payments: ${unmatched.length} rows (${distinct.length} distinct names) did not match a member:`)
