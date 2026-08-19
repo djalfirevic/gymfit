@@ -1419,13 +1419,13 @@ export async function monthlyProductCounts(
   year: number,
 ): Promise<{ productName: string; month: number; count: number }[]> {
   const rows = await db.execute(sql`
-    select ${storeProducts.name} as product_name,
+    select ${storeProducts.name} as "productName",
            extract(month from ${storeSales.soldAt})::int as month,
            sum(${storeSales.quantity})::int as count
     from ${storeSales}
     join ${storeProducts} on ${storeProducts.id} = ${storeSales.productId}
     where extract(year from ${storeSales.soldAt}) = ${year}
-    group by product_name, month
+    group by "productName", month
     order by month
   `)
   return rows as unknown as { productName: string; month: number; count: number }[]
