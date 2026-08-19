@@ -985,6 +985,7 @@ git commit -m "feat: add shared-password session auth and route protection"
 ### Task 5: Members backend — query module + API routes (TDD on status logic)
 
 **Files:**
+- Create: `src/lib/dates.ts` (plain shared utility, not `server-only` — reused by Task 14's client-side overdue-highlighting)
 - Create: `src/lib/db/queries/members.ts`
 - Create: `src/lib/db/queries/members.test.ts`
 - Create: `src/app/api/members/route.ts`
@@ -1032,18 +1033,28 @@ Expected: FAIL — `src/lib/db/queries/members.ts` does not exist.
 
 - [ ] **Step 3: Implement `src/lib/db/queries/members.ts`**
 
+`toDateKey` lives in `src/lib/dates.ts` — a plain, non-`server-only` shared
+utility — not inline here, so the members page (Task 14, a client component)
+can reuse the exact same calendar-day comparison for its overdue-renewal
+highlighting without duplicating the logic (and risking the same time-of-day
+bug this function exists to fix).
+
+```ts
+// src/lib/dates.ts
+export function toDateKey(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
+}
+```
+
 ```ts
 // src/lib/db/queries/members.ts
 import 'server-only'
 import { asc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
 import { members } from '@/lib/db/schema'
+import { toDateKey } from '@/lib/dates'
 
 export type Member = typeof members.$inferSelect
-
-function toDateKey(date: Date): string {
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
-}
 
 export function memberStatus(renewalDate: Date, today: Date = new Date()): 'active' | 'not_renewed' {
   return toDateKey(renewalDate) >= toDateKey(today) ? 'active' : 'not_renewed'
@@ -2792,6 +2803,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Table } from '@/components/ui/Table'
+import { toDateKey } from '@/lib/dates'
 
 type Member = { id: number; fullName: string; membershipRenewalDate: string }
 
@@ -2832,18 +2844,21 @@ export default function MembersPage() {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     const payload = { fullName, membershipRenewalDate: renewalDate }
-    if (editing) {
-      await fetch(`/api/members/${editing.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-    } else {
-      await fetch('/api/members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+    const response = editing
+      ? await fetch(`/api/members/${editing.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      : await fetch('/api/members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      alert(body.error ?? 'Greška pri čuvanju člana')
+      return
     }
     setModalOpen(false)
     queryClient.invalidateQueries({ queryKey: ['members'] })
@@ -2851,7 +2866,11 @@ export default function MembersPage() {
 
   async function handleDelete(id: number) {
     if (!confirm('Obrisati člana?')) return
-    await fetch(`/api/members/${id}`, { method: 'DELETE' })
+    const response = await fetch(`/api/members/${id}`, { method: 'DELETE' })
+    if (!response.ok) {
+      alert('Greška pri brisanju člana')
+      return
+    }
     queryClient.invalidateQueries({ queryKey: ['members'] })
   }
 
@@ -2879,7 +2898,7 @@ export default function MembersPage() {
             key: 'renewal',
             label: 'Obnova članarine',
             render: (row) => {
-              const overdue = new Date(row.membershipRenewalDate) < new Date()
+              const overdue = toDateKey(new Date(row.membershipRenewalDate)) < toDateKey(new Date())
               return (
                 <span className={overdue ? 'font-medium text-red-400' : 'text-neutral-200'}>
                   {new Date(row.membershipRenewalDate).toLocaleDateString('sr-RS')}
