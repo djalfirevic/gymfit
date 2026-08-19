@@ -2,12 +2,9 @@ import 'server-only'
 import { asc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
 import { members } from '@/lib/db/schema'
+import { toDateKey } from '@/lib/dates'
 
 export type Member = typeof members.$inferSelect
-
-function toDateKey(date: Date): string {
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
-}
 
 export function memberStatus(renewalDate: Date, today: Date = new Date()): 'active' | 'not_renewed' {
   return toDateKey(renewalDate) >= toDateKey(today) ? 'active' : 'not_renewed'

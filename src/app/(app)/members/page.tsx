@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Table } from '@/components/ui/Table'
+import { toDateKey } from '@/lib/dates'
 
 type Member = { id: number; fullName: string; membershipRenewalDate: string }
 
@@ -46,18 +47,21 @@ export default function MembersPage() {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     const payload = { fullName, membershipRenewalDate: renewalDate }
-    if (editing) {
-      await fetch(`/api/members/${editing.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-    } else {
-      await fetch('/api/members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+    const response = editing
+      ? await fetch(`/api/members/${editing.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      : await fetch('/api/members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      alert(body.error ?? 'Greška pri čuvanju člana')
+      return
     }
     setModalOpen(false)
     queryClient.invalidateQueries({ queryKey: ['members'] })
@@ -65,7 +69,11 @@ export default function MembersPage() {
 
   async function handleDelete(id: number) {
     if (!confirm('Obrisati člana?')) return
-    await fetch(`/api/members/${id}`, { method: 'DELETE' })
+    const response = await fetch(`/api/members/${id}`, { method: 'DELETE' })
+    if (!response.ok) {
+      alert('Greška pri brisanju člana')
+      return
+    }
     queryClient.invalidateQueries({ queryKey: ['members'] })
   }
 
@@ -93,7 +101,7 @@ export default function MembersPage() {
             key: 'renewal',
             label: 'Obnova članarine',
             render: (row) => {
-              const overdue = new Date(row.membershipRenewalDate) < new Date()
+              const overdue = toDateKey(new Date(row.membershipRenewalDate)) < toDateKey(new Date())
               return (
                 <span className={overdue ? 'font-medium text-red-400' : 'text-neutral-200'}>
                   {new Date(row.membershipRenewalDate).toLocaleDateString('sr-RS')}
