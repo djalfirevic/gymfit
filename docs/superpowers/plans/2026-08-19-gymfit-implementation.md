@@ -2009,7 +2009,7 @@ git commit -m "feat: add settings, investments, and dashboard rollup backend"
 - Create: `seed-data/.gitkeep`
 
 **Interfaces:**
-- Consumes: `db`, schema tables from Task 2; `matchMemberIdByName` from Task 6; `categorizeExpense` from Task 3.
+- Consumes: `db` from `scripts/db-client.ts` (Task 2 — NOT `src/lib/db/client.ts`: that module is marked `server-only`, which throws unconditionally under `tsx`'s runtime since tsx doesn't set the `react-server` export condition Next's bundler uses to no-op the guard; `scripts/db-client.ts` is the same postgres+drizzle setup without that guard, added during Task 2 for exactly this reason), schema tables from Task 2; `matchMemberIdByName` from Task 6; `categorizeExpense` from Task 3.
 - Produces: `pnpm seed:import [--dir ./seed-data]` — reads `Members.csv`, `Payments.csv`, `Store.csv`, `Expenses.csv` from the given directory and upserts them. Skips a table's import (with a printed message) if it already has any rows, so a re-run after a crash-and-restart is safe but never overwrites live data entered later through the app; each table's import runs inside one transaction so a mid-import crash leaves that table untouched rather than half-populated.
 
 - [ ] **Step 1: Write `scripts/seed-import.ts`**
@@ -2021,7 +2021,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parse } from 'csv-parse/sync'
 import { eq } from 'drizzle-orm'
-import { db } from '../src/lib/db/client'
+import { db } from './db-client'
 import { expenses, members, payments, storeProducts, storeSales } from '../src/lib/db/schema'
 import { categorizeExpense } from '../src/lib/expenses/categorize'
 import { matchMemberIdByName } from '../src/lib/import/match-member'
