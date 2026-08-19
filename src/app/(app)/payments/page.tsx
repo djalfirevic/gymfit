@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
@@ -32,6 +32,12 @@ export default function PaymentsPage() {
   const [paidAt, setPaidAt] = useState('')
   const [amount, setAmount] = useState('')
   const [relinking, setRelinking] = useState<Payment | null>(null)
+  const [search, setSearch] = useState('')
+
+  const filtered = useMemo(
+    () => (payments ?? []).filter((payment) => payment.memberNameRaw.toLowerCase().includes(search.toLowerCase())),
+    [payments, search],
+  )
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -77,8 +83,15 @@ export default function PaymentsPage() {
         <Button onClick={() => setModalOpen(true)}>+ Nova uplata</Button>
       </div>
 
+      <input
+        placeholder="Pretraga po imenu člana..."
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+      />
+
       <Table<Payment>
-        rows={payments ?? []}
+        rows={filtered}
         columns={[
           { key: 'member', label: 'Član', render: (row) => row.memberNameRaw },
           {
