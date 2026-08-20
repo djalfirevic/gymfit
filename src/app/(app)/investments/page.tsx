@@ -2,6 +2,8 @@
 
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { YearOverYearChart } from '@/components/charts/YearOverYearChart'
+import { YearOverYearStackedChart } from '@/components/charts/YearOverYearStackedChart'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
@@ -13,16 +15,21 @@ import { formatEur, formatRsd } from '@/lib/currency'
 type CapitalInvestment = { id: number; investedAt: string; amountEur: string; note: string | null }
 type InvestmentsResponse = { entries: CapitalInvestment[]; totalInvestedEur: number }
 
+type DashboardResponse = {
+  rollup: { month: number; zarada: number; troskovi: number; stanje: number; podela: number }[]
+  yearlyTotals: { ukupnaZaradaEur: number; zaradaEur: number }
+}
+
 async function fetchInvestments(): Promise<InvestmentsResponse> {
   const response = await fetch('/api/investments')
   if (!response.ok) throw new Error('Failed to load investments')
   return response.json()
 }
 
-async function fetchDashboard(year: number) {
+async function fetchDashboard(year: number): Promise<DashboardResponse> {
   const response = await fetch(`/api/dashboard?year=${year}`)
   if (!response.ok) throw new Error('Failed to load dashboard')
-  return response.json() as Promise<{ yearlyTotals: { ukupnaZaradaEur: number; zaradaEur: number } }>
+  return response.json()
 }
 
 async function fetchSettings(): Promise<{ rsdToEurRate: number }> {
@@ -53,6 +60,9 @@ export default function InvestmentsPage() {
     { ukupnaZaradaEur: 0, zaradaEur: 0 },
   )
   const dashboardLoaded = yearlyQueries.every((query) => query.data)
+  const yearOverYearData = yearlyQueries
+    .map((query, index) => (query.data ? { year: years[index], rollup: query.data.rollup } : null))
+    .filter((entry): entry is { year: number; rollup: DashboardResponse['rollup'] } => entry !== null)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [investedAt, setInvestedAt] = useState('')
@@ -113,6 +123,16 @@ export default function InvestmentsPage() {
           value={dashboardLoaded ? formatEur(lifetimeTotals.zaradaEur) : '—'}
           hint={dashboardLoaded && rate ? formatRsd(lifetimeTotals.zaradaEur * rate) : undefined}
         />
+      </div>
+
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+        <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima po godinama</h2>
+        <YearOverYearChart data={yearOverYearData} />
+      </div>
+
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+        <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima po godinama</h2>
+        <YearOverYearStackedChart data={yearOverYearData} />
       </div>
 
       <Table<CapitalInvestment>
