@@ -24,7 +24,9 @@
     "sync:payments": "tsx --tsconfig scripts/tsconfig.json scripts/sync-payments.ts",
     "sync:store": "tsx --tsconfig scripts/tsconfig.json scripts/sync-store.ts",
     "sync:expenses": "tsx --tsconfig scripts/tsconfig.json scripts/sync-expenses.ts",
-    "seed:locations": "tsx --tsconfig scripts/tsconfig.json scripts/seed-locations.ts"
+    "seed:locations": "tsx --tsconfig scripts/tsconfig.json scripts/seed-locations.ts",
+    "db:backup": "bash scripts/db-backup.sh",
+    "db:restore": "bash scripts/db-restore.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",

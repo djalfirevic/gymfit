@@ -7,3 +7,6 @@ node_modules/
 next-env.d.ts
 coverage/
 seed-data/
+
+# Database dumps -- contain real member data
+backups/
