@@ -106,6 +106,21 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The logo ships as white artwork on transparency. Painting it through a mask
+   instead of showing the file directly lets it take the theme's colour -- as a
+   plain <img> it would be white-on-white and invisible in the light theme. */
+.logo-mask {
+  -webkit-mask-image: url('/gymfit-logo.png');
+  mask-image: url('/gymfit-logo.png');
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  aspect-ratio: 1200 / 217;
+}
+
 /* Figures line up in columns wherever they appear. */
 .tabular {
   font-family: var(--font-num);

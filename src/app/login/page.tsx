@@ -36,7 +36,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-ground">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-card border border-line bg-surface p-8">
-        <h1 className="mb-6 text-center text-2xl font-bold tracking-tight text-fg">GYMFIT</h1>
+        <div className="logo-mask mb-8 w-full bg-heading" role="img" aria-label="GymFit" />
         <Field label={t('password')} htmlFor="password">
           <input
             id="password"
