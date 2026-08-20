@@ -23,7 +23,7 @@ export function ExpensesByCategoryChart({
       <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
         <XAxis dataKey="category" stroke="#a3a3a3" />
-        <YAxis stroke="#a3a3a3" width={72} tickFormatter={formatNumber} />
+        <YAxis stroke="#a3a3a3" width={85} tickFormatter={formatNumber} />
         <Tooltip
           contentStyle={{ background: '#171717', border: '1px solid #404040' }}
           formatter={(value: number) => formatNumber(value)}
