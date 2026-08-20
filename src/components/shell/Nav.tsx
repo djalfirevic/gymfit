@@ -6,6 +6,7 @@ import clsx from 'clsx'
 
 const LINKS = [
   { href: '/dashboard', label: 'Pregled' },
+  { href: '/statistics', label: 'Statistika' },
   { href: '/members', label: 'Članovi' },
   { href: '/payments', label: 'Uplate' },
   { href: '/store', label: 'Prodavnica' },
