@@ -1,21 +1,28 @@
 'use client'
 
+import clsx from 'clsx'
+
 export function Modal({
   open,
   onClose,
   title,
+  size = 'md',
   children,
 }: {
   open: boolean
   onClose: () => void
   title: string
+  size?: 'md' | 'lg'
   children: React.ReactNode
 }) {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-950 p-6"
+        className={clsx(
+          'w-full rounded-xl border border-neutral-800 bg-neutral-950 p-6',
+          size === 'lg' ? 'max-w-3xl' : 'max-w-md',
+        )}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
