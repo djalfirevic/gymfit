@@ -60,7 +60,7 @@ async function fetchProducts(): Promise<Product[]> {
   return response.json()
 }
 
-export function QuickAdd({ onOpen }: { onOpen?: () => void } = {}) {
+export function QuickAdd() {
   const queryClient = useQueryClient()
   const t = useTranslations('quickAdd')
   const tc = useTranslations('common')
@@ -263,12 +263,7 @@ export function QuickAdd({ onOpen }: { onOpen?: () => void } = {}) {
   return (
     <>
       <Button
-        onClick={() => {
-          onOpen?.()
-          setOpen(true)
-        }}
-        className="w-full"
-      >
+        onClick={() => setOpen(true)} className="w-full">
         {tnav('newEntry')}
       </Button>
 

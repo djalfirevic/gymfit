@@ -40,7 +40,10 @@ export function Nav({ onNavigate }: { onNavigate?: () => void } = {}) {
       </div>
 
       <div className="px-4 pt-4">
-        <QuickAdd onOpen={onNavigate} />
+        {/* Deliberately not closing the drawer here: QuickAdd's modal is a
+            child of this subtree, so unmounting the drawer would destroy the
+            modal the instant it opened. The modal covers the drawer anyway. */}
+        <QuickAdd />
       </div>
 
       <div className="px-5 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">{t('menu')}</div>
