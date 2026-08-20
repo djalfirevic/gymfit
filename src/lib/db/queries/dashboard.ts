@@ -12,15 +12,19 @@ export function computeMonthRollup(zarada: number, troskovi: number): { stanje: 
 }
 
 export function computeYearlyEurTotals(
-  rows: { stanje: number; podela: number }[],
+  rows: { zarada: number; podela: number }[],
   rate: number,
 ): { ukupnaZaradaEur: number; zaradaEur: number } {
   if (!(rate > 0)) {
     throw new Error(`Invalid RSD→EUR rate: ${rate}`)
   }
-  const stanjeSum = rows.reduce((sum, row) => sum + row.stanje, 0)
+  // "Ukupna zarada" is gross income (Zarada) converted to EUR — NOT net-of-
+  // expenses Stanje. Confirmed against the source spreadsheet's own formula
+  // (SUM(Zarada column) / rate); a table before this fix used Stanje here,
+  // which understated the figure by roughly the year's total expenses.
+  const zaradaSum = rows.reduce((sum, row) => sum + row.zarada, 0)
   const podelaSum = rows.reduce((sum, row) => sum + row.podela, 0)
-  return { ukupnaZaradaEur: stanjeSum / rate, zaradaEur: podelaSum / rate }
+  return { ukupnaZaradaEur: zaradaSum / rate, zaradaEur: podelaSum / rate }
 }
 
 async function monthlyIncome(year: number): Promise<Map<number, number>> {

@@ -10,14 +10,16 @@ describe('computeMonthRollup', () => {
 })
 
 describe('computeYearlyEurTotals', () => {
-  it('sums Stanje and Podela across months and converts to EUR at the given rate', () => {
+  it('sums Zarada (gross income) and Podela across months and converts to EUR at the given rate', () => {
+    // Real January/February 2024 figures. Confirmed against the source
+    // spreadsheet's own formula: SUM(Zarada column) / rate — NOT Stanje.
     const rows = [
-      { stanje: 634700, podela: 317350 },
-      { stanje: 641193, podela: 320596.5 },
+      { zarada: 653900, podela: 317350 },
+      { zarada: 677200, podela: 320596.5 },
     ]
-    const rate = 117.3283
+    const rate = 117
     const result = computeYearlyEurTotals(rows, rate)
-    expect(result.ukupnaZaradaEur).toBeCloseTo((634700 + 641193) / rate, 2)
+    expect(result.ukupnaZaradaEur).toBeCloseTo((653900 + 677200) / rate, 2)
     expect(result.zaradaEur).toBeCloseTo((317350 + 320596.5) / rate, 2)
   })
 })

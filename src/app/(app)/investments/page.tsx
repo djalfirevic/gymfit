@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -35,9 +35,24 @@ export default function InvestmentsPage() {
   const queryClient = useQueryClient()
   const { data: investments, isLoading } = useQuery({ queryKey: ['investments'], queryFn: fetchInvestments })
   const currentYear = new Date().getFullYear()
-  const { data: dashboard } = useQuery({ queryKey: ['dashboard', currentYear], queryFn: () => fetchDashboard(currentYear) })
+  const years = Array.from({ length: currentYear - 2024 + 1 }, (_, index) => 2024 + index)
+  const yearlyQueries = useQueries({
+    queries: years.map((year) => ({ queryKey: ['dashboard', year], queryFn: () => fetchDashboard(year) })),
+  })
   const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: fetchSettings })
   const rate = settings?.rsdToEurRate
+
+  // Lifetime totals across every year of data, matching the source
+  // spreadsheet's "Ukupna zarada"/"Zarada" (sums across all years), not just
+  // the current one.
+  const lifetimeTotals = yearlyQueries.reduce(
+    (sum, query) => ({
+      ukupnaZaradaEur: sum.ukupnaZaradaEur + (query.data?.yearlyTotals.ukupnaZaradaEur ?? 0),
+      zaradaEur: sum.zaradaEur + (query.data?.yearlyTotals.zaradaEur ?? 0),
+    }),
+    { ukupnaZaradaEur: 0, zaradaEur: 0 },
+  )
+  const dashboardLoaded = yearlyQueries.every((query) => query.data)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [investedAt, setInvestedAt] = useState('')
@@ -89,14 +104,14 @@ export default function InvestmentsPage() {
           hint={rate ? formatRsd((investments?.totalInvestedEur ?? 0) * rate) : undefined}
         />
         <StatCard
-          label={`Ukupna zarada (${currentYear})`}
-          value={dashboard ? formatEur(dashboard.yearlyTotals.ukupnaZaradaEur) : '—'}
-          hint={dashboard && rate ? formatRsd(dashboard.yearlyTotals.ukupnaZaradaEur * rate) : undefined}
+          label={`Ukupna zarada (${years[0]}–${currentYear})`}
+          value={dashboardLoaded ? formatEur(lifetimeTotals.ukupnaZaradaEur) : '—'}
+          hint={dashboardLoaded && rate ? formatRsd(lifetimeTotals.ukupnaZaradaEur * rate) : undefined}
         />
         <StatCard
-          label={`Zarada (${currentYear})`}
-          value={dashboard ? formatEur(dashboard.yearlyTotals.zaradaEur) : '—'}
-          hint={dashboard && rate ? formatRsd(dashboard.yearlyTotals.zaradaEur * rate) : undefined}
+          label={`Zarada (${years[0]}–${currentYear})`}
+          value={dashboardLoaded ? formatEur(lifetimeTotals.zaradaEur) : '—'}
+          hint={dashboardLoaded && rate ? formatRsd(lifetimeTotals.zaradaEur * rate) : undefined}
         />
       </div>
 
