@@ -1,14 +1,16 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ProductCountsChart } from '@/components/charts/ProductCountsChart'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { Pagination } from '@/components/ui/Pagination'
 import { Table } from '@/components/ui/Table'
 import { errorMessage } from '@/lib/api-error'
 import { formatRsd } from '@/lib/currency'
+import { usePagination } from '@/lib/use-pagination'
 
 type Product = { id: number; name: string; defaultPrice: string; active: boolean }
 type Sale = { id: number; productId: number; soldAt: string; price: string; quantity: number }
@@ -39,6 +41,7 @@ export default function StorePage() {
   const [saleDate, setSaleDate] = useState('')
   const [salePrice, setSalePrice] = useState('')
   const [saleQuantity, setSaleQuantity] = useState('1')
+  const [saleSearch, setSaleSearch] = useState('')
 
   async function handleCreateProduct(event: React.FormEvent) {
     event.preventDefault()
@@ -82,9 +85,22 @@ export default function StorePage() {
     queryClient.invalidateQueries({ queryKey: ['store-sales'] })
   }
 
+  const productById = useMemo(
+    () => new Map((products ?? []).map((product) => [product.id, product])),
+    [products],
+  )
+  const filteredSales = useMemo(
+    () =>
+      (sales ?? []).filter((sale) =>
+        (productById.get(sale.productId)?.name ?? '').toLowerCase().includes(saleSearch.toLowerCase()),
+      ),
+    [sales, productById, saleSearch],
+  )
+  const { page: salesPage, totalPages: salesTotalPages, pageItems: salesPageItems, setPage: setSalesPage } =
+    usePagination(filteredSales)
+
   if (productsLoading || salesLoading) return <p className="text-neutral-400">Učitavanje...</p>
 
-  const productById = new Map((products ?? []).map((product) => [product.id, product]))
   const currentYear = new Date().getFullYear()
   const chartData = (sales ?? [])
     .filter((sale) => new Date(sale.soldAt).getFullYear() === currentYear)
@@ -125,8 +141,22 @@ export default function StorePage() {
           <h2 className="text-lg font-semibold text-white">Prodaja</h2>
           <Button onClick={() => setSaleModalOpen(true)}>+ Nova prodaja</Button>
         </div>
+        <div className="flex items-center justify-between gap-4">
+          <input
+            placeholder="Pretraga po proizvodu..."
+            value={saleSearch}
+            onChange={(event) => {
+              setSaleSearch(event.target.value)
+              setSalesPage(1)
+            }}
+            className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+          />
+          <span className="whitespace-nowrap text-sm text-neutral-400">
+            Prikazano {filteredSales.length} od {sales?.length ?? 0}
+          </span>
+        </div>
         <Table<Sale>
-          rows={sales ?? []}
+          rows={salesPageItems}
           columns={[
             { key: 'product', label: 'Proizvod', render: (row) => productById.get(row.productId)?.name ?? '?' },
             { key: 'date', label: 'Datum', render: (row) => new Date(row.soldAt).toLocaleDateString('sr-RS') },
@@ -134,6 +164,7 @@ export default function StorePage() {
             { key: 'price', label: 'Cena', render: (row) => formatRsd(Number(row.price)) },
           ]}
         />
+        <Pagination page={salesPage} totalPages={salesTotalPages} onPageChange={setSalesPage} />
       </div>
 
       <Modal open={productModalOpen} onClose={() => setProductModalOpen(false)} title="Novi proizvod">

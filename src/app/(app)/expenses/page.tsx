@@ -1,15 +1,17 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ExpensesByCategoryChart } from '@/components/charts/ExpensesByCategoryChart'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { Pagination } from '@/components/ui/Pagination'
 import { Table } from '@/components/ui/Table'
 import { errorMessage } from '@/lib/api-error'
 import { formatRsd } from '@/lib/currency'
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/expenses/categorize'
+import { usePagination } from '@/lib/use-pagination'
 
 type Expense = { id: number; expenseDate: string; description: string; amount: string; category: ExpenseCategory }
 
@@ -41,6 +43,13 @@ export default function ExpensesPage() {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<ExpenseCategory>('ostalo')
+  const [search, setSearch] = useState('')
+
+  const filtered = useMemo(
+    () => (expenses ?? []).filter((expense) => expense.description.toLowerCase().includes(search.toLowerCase())),
+    [expenses, search],
+  )
+  const { page, totalPages, pageItems, setPage } = usePagination(filtered)
 
   function openCreate() {
     setEditing(null)
@@ -111,8 +120,23 @@ export default function ExpensesPage() {
         </div>
       )}
 
+      <div className="flex items-center justify-between gap-4">
+        <input
+          placeholder="Pretraga po nazivu..."
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setPage(1)
+          }}
+          className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+        />
+        <span className="whitespace-nowrap text-sm text-neutral-400">
+          Prikazano {filtered.length} od {expenses?.length ?? 0}
+        </span>
+      </div>
+
       <Table<Expense>
-        rows={expenses ?? []}
+        rows={pageItems}
         columns={[
           { key: 'date', label: 'Datum', render: (row) => new Date(row.expenseDate).toLocaleDateString('sr-RS') },
           { key: 'description', label: 'Naziv', render: (row) => row.description },
@@ -134,6 +158,8 @@ export default function ExpensesPage() {
           },
         ]}
       />
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Izmena troška' : 'Novi trošak'}>
         <form onSubmit={handleSubmit}>

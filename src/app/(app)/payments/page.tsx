@@ -5,9 +5,11 @@ import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { Pagination } from '@/components/ui/Pagination'
 import { Table } from '@/components/ui/Table'
 import { errorMessage } from '@/lib/api-error'
 import { formatRsd } from '@/lib/currency'
+import { usePagination } from '@/lib/use-pagination'
 
 type Payment = { id: number; memberId: number | null; memberNameRaw: string; paidAt: string; amount: string }
 type Member = { id: number; fullName: string }
@@ -39,6 +41,7 @@ export default function PaymentsPage() {
     () => (payments ?? []).filter((payment) => payment.memberNameRaw.toLowerCase().includes(search.toLowerCase())),
     [payments, search],
   )
+  const { page, totalPages, pageItems, setPage } = usePagination(filtered)
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -84,15 +87,23 @@ export default function PaymentsPage() {
         <Button onClick={() => setModalOpen(true)}>+ Nova uplata</Button>
       </div>
 
-      <input
-        placeholder="Pretraga po imenu člana..."
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
-      />
+      <div className="flex items-center justify-between gap-4">
+        <input
+          placeholder="Pretraga po imenu člana..."
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setPage(1)
+          }}
+          className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+        />
+        <span className="whitespace-nowrap text-sm text-neutral-400">
+          Prikazano {filtered.length} od {payments?.length ?? 0}
+        </span>
+      </div>
 
       <Table<Payment>
-        rows={filtered}
+        rows={pageItems}
         columns={[
           { key: 'member', label: 'Član', render: (row) => row.memberNameRaw },
           {
@@ -109,6 +120,8 @@ export default function PaymentsPage() {
           { key: 'amount', label: 'Iznos', render: (row) => formatRsd(Number(row.amount)) },
         ]}
       />
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nova uplata">
         <form onSubmit={handleSubmit}>
