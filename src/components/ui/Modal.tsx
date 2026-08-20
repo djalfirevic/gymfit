@@ -20,10 +20,10 @@ export function Modal({
 
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
         className={clsx(
-          'max-h-full w-full overflow-y-auto rounded-card border border-line bg-surface shadow-lg',
+          'animate-pop-in max-h-full w-full overflow-y-auto rounded-card border border-line bg-surface shadow-lg',
           size === 'lg' ? 'max-w-3xl' : 'max-w-md',
         )}
         onClick={(event) => event.stopPropagation()}

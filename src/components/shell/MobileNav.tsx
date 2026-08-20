@@ -52,9 +52,9 @@ export function MobileNav() {
             type="button"
             aria-label={t('close')}
             onClick={() => setOpen(false)}
-            className="absolute inset-0 h-full w-full cursor-default bg-black/50"
+            className="animate-fade-in absolute inset-0 h-full w-full cursor-default bg-black/50"
           />
-          <div className="absolute inset-y-0 left-0 w-[250px] border-r border-line bg-surface shadow-lg">
+          <div className="animate-slide-in-left absolute inset-y-0 left-0 w-[250px] border-r border-line bg-surface shadow-lg">
             {/* Closing on navigation keeps the drawer from covering the page
                 the user just asked for. */}
             <Nav onNavigate={() => setOpen(false)} />

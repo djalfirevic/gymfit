@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { useApiError } from '@/lib/use-api-error'
@@ -44,6 +45,8 @@ export default function LocationsPage() {
   const { data: locations, isLoading } = useQuery({ queryKey: ['locations'], queryFn: fetchLocations })
 
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState<Location | null>(null)
+  const [deletePending, setDeletePending] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Location | null>(null)
   const [name, setName] = useState('')
@@ -92,14 +95,17 @@ export default function LocationsPage() {
     queryClient.invalidateQueries({ queryKey: ['locations'] })
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm(t('confirmDelete'))) return
-    const response = await fetch(`/api/locations/${id}`, { method: 'DELETE' })
+  async function confirmDelete() {
+    if (!deleting) return
+    setDeletePending(true)
+    const response = await fetch(`/api/locations/${deleting.id}`, { method: 'DELETE' })
+    setDeletePending(false)
     if (!response.ok) {
       alert(t('deleteError'))
       return
     }
-    if (selectedId === id) setSelectedId(null)
+    if (selectedId === deleting.id) setSelectedId(null)
+    setDeleting(null)
     queryClient.invalidateQueries({ queryKey: ['locations'] })
   }
 
@@ -143,7 +149,7 @@ export default function LocationsPage() {
                 <Button variant="secondary" onClick={() => openEdit(location)}>
                   {tc('edit')}
                 </Button>
-                <Button variant="danger" onClick={() => handleDelete(location.id)}>
+                <Button variant="danger" onClick={() => setDeleting(location)}>
                   {tc('delete')}
                 </Button>
                 <a
@@ -213,6 +219,14 @@ export default function LocationsPage() {
           </Button>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        message={t('confirmDelete', { name: deleting?.name ?? '' })}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+        pending={deletePending}
+      />
     </div>
   )
 }

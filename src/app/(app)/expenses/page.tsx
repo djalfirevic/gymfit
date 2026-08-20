@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { ExpensesByCategoryChart } from '@/components/charts/ExpensesByCategoryChart'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Pagination } from '@/components/ui/Pagination'
@@ -48,6 +49,8 @@ export default function ExpensesPage() {
     queryFn: () => fetchDashboardExpenses(currentYear),
   })
 
+  const [deleting, setDeleting] = useState<Expense | null>(null)
+  const [deletePending, setDeletePending] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Expense | null>(null)
   const [expenseDate, setExpenseDate] = useState('')
@@ -149,13 +152,16 @@ export default function ExpensesPage() {
     setModalOpen(false)
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm(t('confirmDelete'))) return
-    const response = await fetch(`/api/expenses/${id}`, { method: 'DELETE' })
+  async function confirmDelete() {
+    if (!deleting) return
+    setDeletePending(true)
+    const response = await fetch(`/api/expenses/${deleting.id}`, { method: 'DELETE' })
+    setDeletePending(false)
     if (!response.ok) {
       alert(t('deleteError'))
       return
     }
+    setDeleting(null)
     queryClient.invalidateQueries({ queryKey: ['expenses'] })
     queryClient.invalidateQueries({ queryKey: ['dashboard-expenses', currentYear] })
   }
@@ -206,7 +212,7 @@ export default function ExpensesPage() {
                 <Button variant="secondary" onClick={() => openEdit(row)}>
                   {tc('edit')}
                 </Button>
-                <Button variant="danger" onClick={() => handleDelete(row.id)}>
+                <Button variant="danger" onClick={() => setDeleting(row)}>
                   {tc('delete')}
                 </Button>
               </div>
@@ -339,6 +345,14 @@ export default function ExpensesPage() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={deleting !== null}
+        message={t('confirmDelete', { name: deleting?.description ?? '' })}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+        pending={deletePending}
+      />
     </div>
   )
 }

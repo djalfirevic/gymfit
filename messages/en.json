@@ -21,7 +21,9 @@
     "note": "Note",
     "yes": "Yes",
     "no": "No",
-    "showing": "Showing {shown} of {total}"
+    "showing": "Showing {shown} of {total}",
+    "confirmTitle": "Confirm",
+    "deleting": "Deleting..."
   },
   "nav": {
     "menu": "Menu",
@@ -130,7 +132,7 @@
     "searchPlaceholder": "Search by name...",
     "fullName": "Full name",
     "renewal": "Membership renewal",
-    "confirmDelete": "Delete this member?",
+    "confirmDelete": "Delete member {name}?",
     "saveError": "Could not save the member",
     "deleteError": "Could not delete the member"
   },
@@ -170,7 +172,7 @@
     "byCategory": "Expenses by category ({year})",
     "addRow": "Add row",
     "removeRow": "Remove row",
-    "confirmDelete": "Delete this expense?",
+    "confirmDelete": "Delete expense {name}?",
     "saveError": "Could not save the expense",
     "deleteError": "Could not delete the expense",
     "partialSaveError": "{failed} of {total} expenses were not saved. They are still in the form — try again."
@@ -199,7 +201,7 @@
     "directions": "Directions",
     "mapLoading": "Loading map...",
     "mapEmpty": "No locations to show",
-    "confirmDelete": "Delete this location?",
+    "confirmDelete": "Delete location {name}?",
     "saveError": "Could not save the location",
     "deleteError": "Could not delete the location"
   },

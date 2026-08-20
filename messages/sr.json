@@ -21,7 +21,9 @@
     "note": "Napomena",
     "yes": "Da",
     "no": "Ne",
-    "showing": "Prikazano {shown} od {total}"
+    "showing": "Prikazano {shown} od {total}",
+    "confirmTitle": "Potvrda",
+    "deleting": "Brisanje..."
   },
   "nav": {
     "menu": "Meni",
@@ -130,7 +132,7 @@
     "searchPlaceholder": "Pretraga po imenu...",
     "fullName": "Ime i prezime",
     "renewal": "Obnova članarine",
-    "confirmDelete": "Obrisati člana?",
+    "confirmDelete": "Obrisati člana {name}?",
     "saveError": "Greška pri čuvanju člana",
     "deleteError": "Greška pri brisanju člana"
   },
@@ -170,7 +172,7 @@
     "byCategory": "Troškovi po kategoriji ({year})",
     "addRow": "Dodaj red",
     "removeRow": "Ukloni red",
-    "confirmDelete": "Obrisati trošak?",
+    "confirmDelete": "Obrisati trošak {name}?",
     "saveError": "Greška pri čuvanju troška",
     "deleteError": "Greška pri brisanju troška",
     "partialSaveError": "{failed} od {total} troška nije sačuvano. Ostali su u formi — pokušajte ponovo."
@@ -199,7 +201,7 @@
     "directions": "Uputstvo",
     "mapLoading": "Učitavanje mape...",
     "mapEmpty": "Nema lokacija za prikaz",
-    "confirmDelete": "Obrisati lokaciju?",
+    "confirmDelete": "Obrisati lokaciju {name}?",
     "saveError": "Greška pri čuvanju lokacije",
     "deleteError": "Greška pri brisanju lokacije"
   },

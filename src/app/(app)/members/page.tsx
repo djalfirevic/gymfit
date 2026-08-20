@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Pagination } from '@/components/ui/Pagination'
@@ -29,6 +30,8 @@ export default function MembersPage() {
   const fmt = useFormat()
   const { data, isLoading } = useQuery({ queryKey: ['members'], queryFn: fetchMembers })
   const [search, setSearch] = useState('')
+  const [deleting, setDeleting] = useState<Member | null>(null)
+  const [deletePending, setDeletePending] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Member | null>(null)
   const [fullName, setFullName] = useState('')
@@ -77,13 +80,19 @@ export default function MembersPage() {
     queryClient.invalidateQueries({ queryKey: ['members'] })
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm(t('confirmDelete'))) return
-    const response = await fetch(`/api/members/${id}`, { method: 'DELETE' })
+  async function confirmDelete() {
+    if (!deleting) return
+    setDeletePending(true)
+    const response = await fetch(`/api/members/${deleting.id}`, { method: 'DELETE' })
+    setDeletePending(false)
     if (!response.ok) {
-      alert(t('deleteError'))
+      // A member with linked payments comes back as 409 with a specific code;
+      // surfacing it beats a generic failure message.
+      const body = await response.json().catch(() => ({}))
+      alert(apiError(body, t('deleteError')))
       return
     }
+    setDeleting(null)
     queryClient.invalidateQueries({ queryKey: ['members'] })
   }
 
@@ -135,7 +144,7 @@ export default function MembersPage() {
                 <Button variant="secondary" onClick={() => openEdit(row)}>
                   {tc('edit')}
                 </Button>
-                <Button variant="danger" onClick={() => handleDelete(row.id)}>
+                <Button variant="danger" onClick={() => setDeleting(row)}>
                   {tc('delete')}
                 </Button>
               </div>
@@ -172,6 +181,14 @@ export default function MembersPage() {
           </Button>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        message={t('confirmDelete', { name: deleting?.fullName ?? '' })}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+        pending={deletePending}
+      />
     </div>
   )
 }

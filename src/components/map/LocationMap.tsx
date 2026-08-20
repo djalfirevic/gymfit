@@ -74,7 +74,10 @@ export function LocationMap({
       center={center}
       zoom={16}
       scrollWheelZoom
-      className="h-[420px] w-full overflow-hidden rounded-card border border-line"
+      // isolate + z-0 traps Leaflet's internal z-indexes (its controls sit at
+      // 1000) inside this container's own stacking context, so they cannot
+      // paint over modals and the mobile drawer.
+      className="relative isolate z-0 h-[420px] w-full overflow-hidden rounded-card border border-line"
     >
       {/* Remounting on theme change swaps the tile set; TileLayer does not
           reload from a changed url prop alone. */}
