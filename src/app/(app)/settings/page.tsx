@@ -18,10 +18,31 @@ export default function SettingsPage() {
   const [rate, setRate] = useState('')
   const [saved, setSaved] = useState(false)
   const [syncedRate, setSyncedRate] = useState<number | null>(null)
+  const [loadingLiveRate, setLoadingLiveRate] = useState(false)
+  const [liveRateError, setLiveRateError] = useState<string | null>(null)
 
   if (data && data.rsdToEurRate !== syncedRate) {
     setSyncedRate(data.rsdToEurRate)
     setRate(String(data.rsdToEurRate))
+  }
+
+  async function handleReloadLiveRate() {
+    setLoadingLiveRate(true)
+    setLiveRateError(null)
+    try {
+      const response = await fetch('/api/settings/live-rate')
+      const body = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        // Fetch failed — leave the current (static) value exactly as it was.
+        setLiveRateError(errorMessage(body, 'Kurs sa servera nije dostupan, ostaje ručno unet kurs'))
+        return
+      }
+      setRate(String(body.rate))
+    } catch {
+      setLiveRateError('Kurs sa servera nije dostupan, ostaje ručno unet kurs')
+    } finally {
+      setLoadingLiveRate(false)
+    }
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -48,16 +69,22 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-bold text-white">Podešavanja</h1>
       <form onSubmit={handleSubmit} className="max-w-sm rounded-xl border border-neutral-800 bg-neutral-900 p-5">
         <Field label="Kurs RSD → EUR" htmlFor="rate">
-          <input
-            id="rate"
-            type="number"
-            step="0.0001"
-            min="0.0001"
-            value={rate}
-            onChange={(event) => setRate(event.target.value)}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
-            required
-          />
+          <div className="flex gap-2">
+            <input
+              id="rate"
+              type="number"
+              step="0.0001"
+              min="0.0001"
+              value={rate}
+              onChange={(event) => setRate(event.target.value)}
+              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              required
+            />
+            <Button type="button" variant="secondary" onClick={handleReloadLiveRate} disabled={loadingLiveRate}>
+              {loadingLiveRate ? '...' : '↻'}
+            </Button>
+          </div>
+          {liveRateError && <p className="mt-1 text-xs text-yellow-400">{liveRateError}</p>}
         </Field>
         <Button type="submit">{saved ? 'Sačuvano ✓' : 'Sačuvaj'}</Button>
       </form>
