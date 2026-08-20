@@ -99,7 +99,7 @@ export default function StorePage() {
   const { page: salesPage, totalPages: salesTotalPages, pageItems: salesPageItems, setPage: setSalesPage } =
     usePagination(filteredSales)
 
-  if (productsLoading || salesLoading) return <p className="text-neutral-400">Učitavanje...</p>
+  if (productsLoading || salesLoading) return <p className="text-muted">Učitavanje...</p>
 
   const currentYear = new Date().getFullYear()
   const chartData = (sales ?? [])
@@ -113,17 +113,17 @@ export default function StorePage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Prodavnica</h1>
+        <h1 className="text-lg font-semibold text-heading">Prodavnica</h1>
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Prodaja po proizvodu i mesecu ({currentYear})</h2>
+      <div className="rounded-card border border-line bg-surface p-4">
+        <h2 className="mb-4 text-md font-semibold text-heading">Prodaja po proizvodu i mesecu ({currentYear})</h2>
         <ProductCountsChart data={chartData} />
       </div>
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Proizvodi</h2>
+          <h2 className="text-md font-semibold text-heading">Proizvodi</h2>
           <Button onClick={() => setProductModalOpen(true)}>+ Novi proizvod</Button>
         </div>
         <Table<Product>
@@ -138,7 +138,7 @@ export default function StorePage() {
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Prodaja</h2>
+          <h2 className="text-md font-semibold text-heading">Prodaja</h2>
           <Button onClick={() => setSaleModalOpen(true)}>+ Nova prodaja</Button>
         </div>
         <div className="flex items-center justify-between gap-4">
@@ -149,9 +149,9 @@ export default function StorePage() {
               setSaleSearch(event.target.value)
               setSalesPage(1)
             }}
-            className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+            className="w-full max-w-sm rounded-card border border-line bg-surface px-3 py-2 text-fg"
           />
-          <span className="whitespace-nowrap text-sm text-neutral-400">
+          <span className="whitespace-nowrap text-sm text-muted">
             Prikazano {filteredSales.length} od {sales?.length ?? 0}
           </span>
         </div>
@@ -174,7 +174,7 @@ export default function StorePage() {
               id="productName"
               value={productName}
               onChange={(event) => setProductName(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -184,7 +184,7 @@ export default function StorePage() {
               type="number"
               value={productPrice}
               onChange={(event) => setProductPrice(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -201,7 +201,7 @@ export default function StorePage() {
               id="saleProductId"
               value={saleProductId}
               onChange={(event) => setSaleProductId(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             >
               <option value="" disabled>
@@ -220,7 +220,7 @@ export default function StorePage() {
               type="date"
               value={saleDate}
               onChange={(event) => setSaleDate(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -230,7 +230,7 @@ export default function StorePage() {
               type="number"
               value={salePrice}
               onChange={(event) => setSalePrice(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -241,7 +241,7 @@ export default function StorePage() {
               min="1"
               value={saleQuantity}
               onChange={(event) => setSaleQuantity(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>

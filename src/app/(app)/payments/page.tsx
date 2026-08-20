@@ -78,12 +78,12 @@ export default function PaymentsPage() {
     queryClient.invalidateQueries({ queryKey: ['payments'] })
   }
 
-  if (isLoading) return <p className="text-neutral-400">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">Učitavanje...</p>
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Uplate</h1>
+        <h1 className="text-lg font-semibold text-heading">Uplate</h1>
         <Button onClick={() => setModalOpen(true)}>+ Nova uplata</Button>
       </div>
 
@@ -95,9 +95,9 @@ export default function PaymentsPage() {
             setSearch(event.target.value)
             setPage(1)
           }}
-          className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+          className="w-full max-w-sm rounded-card border border-line bg-surface px-3 py-2 text-fg"
         />
-        <span className="whitespace-nowrap text-sm text-neutral-400">
+        <span className="whitespace-nowrap text-sm text-muted">
           Prikazano {filtered.length} od {payments?.length ?? 0}
         </span>
       </div>
@@ -111,7 +111,7 @@ export default function PaymentsPage() {
             label: '',
             render: (row) =>
               row.memberId === null ? (
-                <button className="text-xs font-medium text-yellow-400 underline" onClick={() => setRelinking(row)}>
+                <button className="text-xs font-medium text-warning underline" onClick={() => setRelinking(row)}>
                   Nije povezano — poveži
                 </button>
               ) : null,
@@ -131,7 +131,7 @@ export default function PaymentsPage() {
               value={memberNameRaw}
               onChange={(event) => setMemberNameRaw(event.target.value)}
               list="member-names"
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
             <datalist id="member-names">
@@ -146,7 +146,7 @@ export default function PaymentsPage() {
               type="date"
               value={paidAt}
               onChange={(event) => setPaidAt(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -156,7 +156,7 @@ export default function PaymentsPage() {
               type="number"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -172,7 +172,7 @@ export default function PaymentsPage() {
             <button
               key={member.id}
               onClick={() => handleRelink(member.id)}
-              className="rounded-md border border-neutral-700 px-3 py-2 text-left text-white hover:bg-neutral-800"
+              className="rounded-card border border-line px-3 py-2 text-left text-fg hover:bg-surface-2"
             >
               {member.fullName}
             </button>

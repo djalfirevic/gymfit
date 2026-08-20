@@ -154,18 +154,18 @@ export default function ExpensesPage() {
     queryClient.invalidateQueries({ queryKey: ['dashboard-expenses', currentYear] })
   }
 
-  if (isLoading) return <p className="text-neutral-400">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">Učitavanje...</p>
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Troškovi</h1>
+        <h1 className="text-lg font-semibold text-heading">Troškovi</h1>
         <Button onClick={openCreate}>+ Novi trošak</Button>
       </div>
 
       {categoryData && (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-          <h2 className="mb-4 text-lg font-semibold text-white">Troškovi po kategoriji ({currentYear})</h2>
+        <div className="rounded-card border border-line bg-surface p-4">
+          <h2 className="mb-4 text-md font-semibold text-heading">Troškovi po kategoriji ({currentYear})</h2>
           <ExpensesByCategoryChart data={categoryData} />
         </div>
       )}
@@ -178,9 +178,9 @@ export default function ExpensesPage() {
             setSearch(event.target.value)
             setPage(1)
           }}
-          className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+          className="w-full max-w-sm rounded-card border border-line bg-surface px-3 py-2 text-fg"
         />
-        <span className="whitespace-nowrap text-sm text-neutral-400">
+        <span className="whitespace-nowrap text-sm text-muted">
           Prikazano {filtered.length} od {expenses?.length ?? 0}
         </span>
       </div>
@@ -220,7 +220,7 @@ export default function ExpensesPage() {
                 type="date"
                 value={expenseDate}
                 onChange={(event) => setExpenseDate(event.target.value)}
-                className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 required
               />
             </Field>
@@ -229,7 +229,7 @@ export default function ExpensesPage() {
                 id="description"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 required
               />
             </Field>
@@ -239,7 +239,7 @@ export default function ExpensesPage() {
                 type="number"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
-                className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 required
               />
             </Field>
@@ -248,7 +248,7 @@ export default function ExpensesPage() {
                 id="category"
                 value={category}
                 onChange={(event) => setCategory(event.target.value as ExpenseCategory)}
-                className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 required
               >
                 {EXPENSE_CATEGORIES.map((value) => (
@@ -266,7 +266,7 @@ export default function ExpensesPage() {
       ) : (
         <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Novi trošak" size="lg">
           <form onSubmit={handleCreateSubmit} className="flex flex-col gap-3">
-            <div className="hidden gap-2 px-1 text-xs text-neutral-400 sm:grid sm:grid-cols-[1fr_2fr_1fr_1.4fr_auto]">
+            <div className="hidden gap-2 px-1 text-xs text-muted sm:grid sm:grid-cols-[1fr_2fr_1fr_1.4fr_auto]">
               <span>Datum</span>
               <span>Naziv</span>
               <span>Iznos (RSD)</span>
@@ -280,14 +280,14 @@ export default function ExpensesPage() {
                   aria-label="Datum"
                   value={row.expenseDate}
                   onChange={(event) => updateRow(row.localId, { expenseDate: event.target.value })}
-                  className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
                   required
                 />
                 <input
                   aria-label="Naziv"
                   value={row.description}
                   onChange={(event) => updateRow(row.localId, { description: event.target.value })}
-                  className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
                   required
                 />
                 <input
@@ -295,14 +295,14 @@ export default function ExpensesPage() {
                   aria-label="Iznos (RSD)"
                   value={row.amount}
                   onChange={(event) => updateRow(row.localId, { amount: event.target.value })}
-                  className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
                   required
                 />
                 <select
                   aria-label="Kategorija"
                   value={row.category}
                   onChange={(event) => updateRow(row.localId, { category: event.target.value as ExpenseCategory })}
-                  className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
                   required
                 >
                   {EXPENSE_CATEGORIES.map((value) => (

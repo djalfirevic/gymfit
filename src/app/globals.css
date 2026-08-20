@@ -1,11 +1,122 @@
 @import 'tailwindcss';
 
+/*
+ * Semantic tokens. Components reference these by role (surface, line, muted)
+ * rather than by shade, so a single set of classes renders correctly in both
+ * themes -- no `dark:` variant on every element.
+ *
+ * `@theme inline` matters here: it makes utilities resolve `var(--surface)` at
+ * the element instead of baking in whatever :root held at build time, which is
+ * what lets the [data-theme] swap below actually take effect.
+ */
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-heading: var(--heading);
+  --color-muted: var(--muted);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-soft: var(--primary-soft);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  --font-ui: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-num: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+
+  /* Dense admin scale -- 13px base is what makes the layout read as a
+     dashboard rather than a document. */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 22px;
+
+  --radius-card: 4px;
+}
+
 :root {
-  --color-bg: #0a0a0a;
-  --color-fg: #f5f5f5;
+  --ground: #f3f3f9;
+  --surface: #ffffff;
+  --surface-2: #eff2f7;
+  --line: #e9ebec;
+  --fg: #212529;
+  --heading: #495057;
+  --muted: #878a99;
+
+  --primary: #405189;
+  --primary-hover: #354571;
+  --primary-fg: #ffffff;
+  --primary-soft: rgb(64 81 137 / 0.15);
+
+  --success: #0ab39c;
+  --warning: #f7b84b;
+  --danger: #f06548;
+  --info: #299cdb;
+}
+
+/* System preference, unless an explicit light choice overrides it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ground: #041324;
+    --surface: #05192f;
+    --surface-2: #061f3b;
+    --line: #2a4562;
+    --fg: #ced4da;
+    --heading: #ced4da;
+    --muted: #838a95;
+
+    --primary: #5c72bd;
+    --primary-hover: #6b80c9;
+    --primary-fg: #ffffff;
+    --primary-soft: rgb(92 114 189 / 0.2);
+  }
+}
+
+/* Explicit choice wins in both directions. */
+:root[data-theme='dark'] {
+  --ground: #041324;
+  --surface: #05192f;
+  --surface-2: #061f3b;
+  --line: #2a4562;
+  --fg: #ced4da;
+  --heading: #ced4da;
+  --muted: #838a95;
+
+  --primary: #5c72bd;
+  --primary-hover: #6b80c9;
+  --primary-fg: #ffffff;
+  --primary-soft: rgb(92 114 189 / 0.2);
 }
 
 body {
-  background: var(--color-bg);
-  color: var(--color-fg);
+  background: var(--ground);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Figures line up in columns wherever they appear. */
+.tabular {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

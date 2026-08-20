@@ -81,12 +81,12 @@ export default function MembersPage() {
     queryClient.invalidateQueries({ queryKey: ['members'] })
   }
 
-  if (isLoading) return <p className="text-neutral-400">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">Učitavanje...</p>
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Članovi</h1>
+        <h1 className="text-lg font-semibold text-heading">Članovi</h1>
         <Button onClick={openCreate}>+ Novi član</Button>
       </div>
 
@@ -98,9 +98,9 @@ export default function MembersPage() {
             setSearch(event.target.value)
             setPage(1)
           }}
-          className="w-full max-w-sm rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+          className="w-full max-w-sm rounded-card border border-line bg-surface px-3 py-2 text-fg"
         />
-        <span className="whitespace-nowrap text-sm text-neutral-400">
+        <span className="whitespace-nowrap text-sm text-muted">
           Prikazano {filtered.length} od {data?.length ?? 0}
         </span>
       </div>
@@ -115,7 +115,7 @@ export default function MembersPage() {
             render: (row) => {
               const overdue = toDateKey(new Date(row.membershipRenewalDate)) < toDateKey(new Date())
               return (
-                <span className={overdue ? 'font-medium text-red-400' : 'text-neutral-200'}>
+                <span className={overdue ? 'font-medium text-danger' : 'text-fg'}>
                   {new Date(row.membershipRenewalDate).toLocaleDateString('sr-RS')}
                 </span>
               )
@@ -147,7 +147,7 @@ export default function MembersPage() {
               id="fullName"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -157,7 +157,7 @@ export default function MembersPage() {
               type="date"
               value={renewalDate}
               onChange={(event) => setRenewalDate(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>

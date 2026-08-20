@@ -244,11 +244,11 @@ export function QuickAdd() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} className="mb-2 !bg-blue-500 hover:!bg-blue-400">
+      <Button onClick={() => setOpen(true)} className="w-full">
         + Novi upis
       </Button>
 
-      <Modal open={open} onClose={closeAndReset} title="Novi upis">
+      <Modal open={open} onClose={closeAndReset} title="Novi upis" size="lg">
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <Button variant={activeType === 'memberPayment' ? 'primary' : 'secondary'} onClick={() => setActiveType('memberPayment')}>
@@ -263,7 +263,7 @@ export function QuickAdd() {
           </div>
 
           {activeType === 'memberPayment' && (
-            <div className="flex flex-col gap-2 rounded-md border border-neutral-800 p-3">
+            <div className="flex flex-col gap-2 rounded-card border border-line p-3">
               <Field label="Ime člana" htmlFor="qa-member-name">
                 <input
                   id="qa-member-name"
@@ -273,7 +273,7 @@ export function QuickAdd() {
                     setResolvedMemberId(null)
                   }}
                   list="qa-member-names"
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
                 <datalist id="qa-member-names">
                   {knownMembers.map((member) => (
@@ -282,7 +282,7 @@ export function QuickAdd() {
                 </datalist>
               </Field>
               {showNewMemberPrompt && (
-                <div className="flex items-center justify-between rounded-md bg-neutral-800 px-3 py-2 text-sm text-yellow-300">
+                <div className="flex items-center justify-between rounded-card bg-surface-2 px-3 py-2 text-sm text-warning">
                   <span>Novi član?</span>
                   <Button type="button" onClick={handleCreateMember} disabled={creatingMember}>
                     {creatingMember ? '...' : 'Dodaj člana'}
@@ -295,7 +295,7 @@ export function QuickAdd() {
                   type="number"
                   value={paymentAmount}
                   onChange={(event) => setPaymentAmount(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
               <Field label="Važi do" htmlFor="qa-renewal-until">
@@ -304,7 +304,7 @@ export function QuickAdd() {
                   type="date"
                   value={renewalUntil}
                   onChange={(event) => setRenewalUntil(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
               <Button
@@ -319,13 +319,13 @@ export function QuickAdd() {
           )}
 
           {activeType === 'sale' && (
-            <div className="flex flex-col gap-2 rounded-md border border-neutral-800 p-3">
+            <div className="flex flex-col gap-2 rounded-card border border-line p-3">
               <Field label="Proizvod" htmlFor="qa-sale-product">
                 <select
                   id="qa-sale-product"
                   value={saleProductId}
                   onChange={(event) => setSaleProductId(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 >
                   <option value="" disabled>
                     Izaberi proizvod
@@ -343,7 +343,7 @@ export function QuickAdd() {
                   type="date"
                   value={saleDate}
                   onChange={(event) => setSaleDate(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
               <Field label="Cena (RSD)" htmlFor="qa-sale-price">
@@ -352,7 +352,7 @@ export function QuickAdd() {
                   type="number"
                   value={salePrice}
                   onChange={(event) => setSalePrice(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
               <Field label="Količina" htmlFor="qa-sale-quantity">
@@ -362,7 +362,7 @@ export function QuickAdd() {
                   min="1"
                   value={saleQuantity}
                   onChange={(event) => setSaleQuantity(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
               <Button type="button" variant="secondary" onClick={addSaleToQueue} disabled={!saleProductId || !salePrice}>
@@ -372,14 +372,14 @@ export function QuickAdd() {
           )}
 
           {activeType === 'expense' && (
-            <div className="flex flex-col gap-2 rounded-md border border-neutral-800 p-3">
+            <div className="flex flex-col gap-2 rounded-card border border-line p-3">
               <Field label="Datum" htmlFor="qa-expense-date">
                 <input
                   id="qa-expense-date"
                   type="date"
                   value={expenseDate}
                   onChange={(event) => setExpenseDate(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
               <Field label="Naziv" htmlFor="qa-expense-description">
@@ -387,7 +387,7 @@ export function QuickAdd() {
                   id="qa-expense-description"
                   value={expenseDescription}
                   onChange={(event) => setExpenseDescription(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
               <Field label="Iznos (RSD)" htmlFor="qa-expense-amount">
@@ -396,7 +396,7 @@ export function QuickAdd() {
                   type="number"
                   value={expenseAmount}
                   onChange={(event) => setExpenseAmount(event.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
               <Field label="Kategorija" htmlFor="qa-expense-category">
@@ -404,7 +404,7 @@ export function QuickAdd() {
                   id="qa-expense-category"
                   value={expenseCategory}
                   onChange={(event) => setExpenseCategory(event.target.value as ExpenseCategory)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 >
                   {EXPENSE_CATEGORIES.map((value) => (
                     <option key={value} value={value}>
@@ -426,17 +426,17 @@ export function QuickAdd() {
 
           {queue.length > 0 && (
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold text-neutral-300">Za čuvanje ({queue.length})</h3>
+              <h3 className="text-sm font-semibold text-muted">Za čuvanje ({queue.length})</h3>
               {queue.map((entry) => (
                 <div
                   key={entry.localId}
-                  className="flex items-center justify-between rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-200"
+                  className="flex items-center justify-between rounded-card border border-line px-3 py-2 text-sm text-fg"
                 >
                   <span>{summarize(entry)}</span>
                   <button
                     type="button"
                     onClick={() => removeFromQueue(entry.localId)}
-                    className="text-neutral-400 hover:text-white"
+                    className="text-muted hover:text-fg"
                     aria-label="Ukloni"
                   >
                     ✕

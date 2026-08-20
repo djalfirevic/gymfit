@@ -87,12 +87,12 @@ export default function InvestmentsPage() {
     queryClient.invalidateQueries({ queryKey: ['investments'] })
   }
 
-  if (isLoading) return <p className="text-neutral-400">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">Učitavanje...</p>
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Investicije</h1>
+        <h1 className="text-lg font-semibold text-heading">Investicije</h1>
         <Button onClick={() => setModalOpen(true)}>+ Novo ulaganje</Button>
       </div>
 
@@ -114,23 +114,23 @@ export default function InvestmentsPage() {
         />
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima po godinama</h2>
+      <div className="rounded-card border border-line bg-surface p-4">
+        <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima po godinama</h2>
         <YearOverYearChart data={yearOverYearData} valueKey="zarada" />
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima po godinama</h2>
+      <div className="rounded-card border border-line bg-surface p-4">
+        <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima po godinama</h2>
         <YearOverYearStackedChart data={yearOverYearData} />
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Stanje po mesecima po godinama (posle troškova)</h2>
+      <div className="rounded-card border border-line bg-surface p-4">
+        <h2 className="mb-4 text-md font-semibold text-heading">Stanje po mesecima po godinama (posle troškova)</h2>
         <YearOverYearChart data={yearOverYearData} valueKey="stanje" />
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Podela po mesecima po godinama (Stanje / 2)</h2>
+      <div className="rounded-card border border-line bg-surface p-4">
+        <h2 className="mb-4 text-md font-semibold text-heading">Podela po mesecima po godinama (Stanje / 2)</h2>
         <YearOverYearChart data={yearOverYearData} valueKey="podela" />
       </div>
 
@@ -142,7 +142,7 @@ export default function InvestmentsPage() {
               type="date"
               value={investedAt}
               onChange={(event) => setInvestedAt(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -153,7 +153,7 @@ export default function InvestmentsPage() {
               step="0.01"
               value={amountEur}
               onChange={(event) => setAmountEur(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
           </Field>
@@ -162,7 +162,7 @@ export default function InvestmentsPage() {
               id="note"
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
             />
           </Field>
           <Button type="submit" className="w-full">

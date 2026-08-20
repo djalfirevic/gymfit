@@ -74,10 +74,10 @@ export default function StatisticsPage() {
   const { data: expenses, isLoading: expensesLoading } = useQuery({ queryKey: ['expenses'], queryFn: fetchExpenses })
 
   if (dashboardLoading || productsLoading || salesLoading || expensesLoading) {
-    return <p className="text-neutral-400">Učitavanje...</p>
+    return <p className="text-muted">Učitavanje...</p>
   }
   if (!dashboard || !products || !sales || !expenses) {
-    return <p className="text-neutral-400">Greška pri učitavanju podataka.</p>
+    return <p className="text-muted">Greška pri učitavanju podataka.</p>
   }
 
   const productById = new Map(products.map((product) => [product.id, product]))
@@ -102,11 +102,11 @@ export default function StatisticsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Statistika</h1>
+        <h1 className="text-lg font-semibold text-heading">Statistika</h1>
         <select
           value={year}
           onChange={(event) => setYear(Number(event.target.value))}
-          className="rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+          className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
         >
           {years.map((y) => (
             <option key={y} value={y}>
@@ -117,8 +117,8 @@ export default function StatisticsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-          <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima ({year})</h2>
+        <div className="rounded-card border border-line bg-surface p-4">
+          <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima ({year})</h2>
           <Table<{ id: number; month: string; zarada: string; troskovi: string; stanje: string; podela: string }>
             rows={dashboard.rollup.map((row) => ({
               id: row.month,
@@ -155,21 +155,21 @@ export default function StatisticsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-          <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima</h2>
-          <MonthlyBarChart data={dashboard.rollup.map((row) => ({ month: row.month, value: row.zarada }))} color="#60a5fa" />
+        <div className="rounded-card border border-line bg-surface p-4">
+          <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima</h2>
+          <MonthlyBarChart data={dashboard.rollup.map((row) => ({ month: row.month, value: row.zarada }))} tone="primary" />
         </div>
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-          <h2 className="mb-4 text-lg font-semibold text-white">Troškovi po mesecima</h2>
+        <div className="rounded-card border border-line bg-surface p-4">
+          <h2 className="mb-4 text-md font-semibold text-heading">Troškovi po mesecima</h2>
           <MonthlyBarChart
             data={dashboard.rollup.map((row) => ({ month: row.month, value: row.troskovi }))}
-            color="#f87171"
+            tone="danger"
           />
         </div>
       </div>
 
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Stavke</h2>
+      <div className="rounded-card border border-line bg-surface p-4">
+        <h2 className="mb-4 text-md font-semibold text-heading">Stavke</h2>
         <ItemCountsChart data={itemCountsData} />
       </div>
     </div>

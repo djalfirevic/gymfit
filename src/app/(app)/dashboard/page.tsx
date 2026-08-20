@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const currentYearQuery = queries[queries.length - 1]
 
   if (queries.some((query) => query.isLoading)) {
-    return <p className="text-neutral-400">Učitavanje...</p>
+    return <p className="text-muted">Učitavanje...</p>
   }
 
   const yearOverYearData = queries
@@ -42,7 +42,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-2xl font-bold text-white">Pregled</h1>
+      <h1 className="text-lg font-semibold text-heading">Pregled</h1>
 
       {current && (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -59,14 +59,14 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima po godinama</h2>
+      <div className="rounded-card border border-line bg-surface p-4">
+        <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima po godinama</h2>
         <YearOverYearChart data={yearOverYearData} />
       </div>
 
       {current && (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
-          <h2 className="mb-4 text-lg font-semibold text-white">Troškovi po kategoriji ({current.year})</h2>
+        <div className="rounded-card border border-line bg-surface p-4">
+          <h2 className="mb-4 text-md font-semibold text-heading">Troškovi po kategoriji ({current.year})</h2>
           <ExpensesByCategoryChart data={current.expensesByCategory} />
         </div>
       )}

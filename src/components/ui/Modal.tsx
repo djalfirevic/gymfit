@@ -17,21 +17,21 @@ export function Modal({
 }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
         className={clsx(
-          'w-full rounded-xl border border-neutral-800 bg-neutral-950 p-6',
+          'max-h-full w-full overflow-y-auto rounded-card border border-line bg-surface shadow-lg',
           size === 'lg' ? 'max-w-3xl' : 'max-w-md',
         )}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-neutral-400 hover:text-white" aria-label="Zatvori">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <h2 className="text-md font-semibold text-heading">{title}</h2>
+          <button onClick={onClose} className="text-muted transition-colors hover:text-fg" aria-label="Zatvori">
             ✕
           </button>
         </div>
-        {children}
+        <div className="p-4">{children}</div>
       </div>
     </div>
   )

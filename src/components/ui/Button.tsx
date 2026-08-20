@@ -9,10 +9,10 @@ export function Button({
   return (
     <button
       className={clsx(
-        'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-        variant === 'primary' && 'bg-white text-black hover:bg-neutral-200',
-        variant === 'secondary' && 'border border-neutral-700 text-white hover:bg-neutral-800',
-        variant === 'danger' && 'bg-red-900 text-white hover:bg-red-800',
+        'rounded-card px-3.5 py-2 text-base font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+        variant === 'primary' && 'bg-primary text-primary-fg hover:bg-primary-hover',
+        variant === 'secondary' && 'border border-line text-fg hover:border-primary hover:text-primary',
+        variant === 'danger' && 'bg-danger text-white hover:opacity-90',
         className,
       )}
       {...props}

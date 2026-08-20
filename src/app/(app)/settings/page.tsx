@@ -62,12 +62,12 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000)
   }
 
-  if (isLoading) return <p className="text-neutral-400">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">Učitavanje...</p>
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-white">Podešavanja</h1>
-      <form onSubmit={handleSubmit} className="max-w-sm rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+      <h1 className="text-lg font-semibold text-heading">Podešavanja</h1>
+      <form onSubmit={handleSubmit} className="max-w-sm rounded-card border border-line bg-surface p-4">
         <Field label="Kurs RSD → EUR" htmlFor="rate">
           <div className="flex gap-2">
             <input
@@ -77,14 +77,14 @@ export default function SettingsPage() {
               min="0.0001"
               value={rate}
               onChange={(event) => setRate(event.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-white"
+              className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
               required
             />
             <Button type="button" variant="secondary" onClick={handleReloadLiveRate} disabled={loadingLiveRate}>
               {loadingLiveRate ? '...' : '↻'}
             </Button>
           </div>
-          {liveRateError && <p className="mt-1 text-xs text-yellow-400">{liveRateError}</p>}
+          {liveRateError && <p className="mt-1 text-xs text-warning">{liveRateError}</p>}
         </Field>
         <Button type="submit">{saved ? 'Sačuvano ✓' : 'Sačuvaj'}</Button>
       </form>

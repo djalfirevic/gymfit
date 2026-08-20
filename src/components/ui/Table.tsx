@@ -6,12 +6,15 @@ export function Table<T extends { id: number | string }>({
   rows: T[]
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-neutral-800">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-neutral-900 text-neutral-400">
+    <div className="overflow-x-auto rounded-card border border-line bg-surface">
+      <table className="w-full text-left text-base">
+        <thead className="border-b border-line bg-surface-2 text-muted">
           <tr>
             {columns.map((column) => (
-              <th key={column.key} className="px-4 py-2 font-medium">
+              <th
+                key={column.key}
+                className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+              >
                 {column.label}
               </th>
             ))}
@@ -19,9 +22,9 @@ export function Table<T extends { id: number | string }>({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.id} className="border-t border-neutral-800 hover:bg-neutral-900/60">
+            <tr key={row.id} className="border-b border-line transition-colors last:border-0 hover:bg-surface-2">
               {columns.map((column) => (
-                <td key={column.key} className="px-4 py-2">
+                <td key={column.key} className="px-4 py-2.5">
                   {column.render(row)}
                 </td>
               ))}

@@ -27,25 +27,41 @@ export function Nav() {
   }
 
   return (
-    <nav className="flex h-full flex-col gap-1 p-4">
-      <div className="mb-6 text-lg font-bold tracking-tight text-white">GYMFIT</div>
-      <QuickAdd />
-      {LINKS.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className={clsx(
-            'rounded-md px-3 py-2 text-sm font-medium transition-colors',
-            pathname.startsWith(link.href) ? 'bg-white text-black' : 'text-neutral-300 hover:bg-neutral-800',
-          )}
-        >
-          {link.label}
-        </Link>
-      ))}
+    <nav className="flex h-full flex-col">
+      <div className="flex h-[58px] shrink-0 items-center gap-2.5 border-b border-line px-5">
+        <div className="grid h-6 w-6 shrink-0 place-items-center rounded-card bg-primary text-xs font-bold text-primary-fg">
+          GF
+        </div>
+        <span className="text-lg font-bold tracking-tight text-heading">GymFit</span>
+      </div>
+
+      <div className="px-4 pt-4">
+        <QuickAdd />
+      </div>
+
+      <div className="px-5 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Meni</div>
+
+      <div className="flex flex-col gap-px px-3">
+        {LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={clsx(
+              'rounded-card px-2.5 py-2 text-base font-medium transition-colors',
+              pathname.startsWith(link.href)
+                ? 'bg-primary-soft font-semibold text-primary'
+                : 'text-muted hover:bg-primary-soft hover:text-primary',
+            )}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+
       <button
         type="button"
         onClick={handleLogout}
-        className="mt-auto rounded-md px-3 py-2 text-left text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800"
+        className="mt-auto mx-3 mb-4 rounded-card px-2.5 py-2 text-left text-base font-medium text-muted transition-colors hover:bg-primary-soft hover:text-primary"
       >
         Odjavi se
       </button>
