@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { ExpensesByCategoryChart } from '@/components/charts/ExpensesByCategoryChart'
 import { Button } from '@/components/ui/Button'
@@ -8,9 +9,9 @@ import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Pagination } from '@/components/ui/Pagination'
 import { Table } from '@/components/ui/Table'
-import { errorMessage } from '@/lib/api-error'
-import { formatRsd } from '@/lib/currency'
-import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/expenses/categorize'
+import { useApiError } from '@/lib/use-api-error'
+import { useFormat } from '@/lib/use-format'
+import { EXPENSE_CATEGORIES, type ExpenseCategory } from '@/lib/expenses/categorize'
 import { usePagination } from '@/lib/use-pagination'
 
 type Expense = { id: number; expenseDate: string; description: string; amount: string; category: ExpenseCategory }
@@ -35,6 +36,11 @@ async function fetchDashboardExpenses(year: number): Promise<{ category: Expense
 
 export default function ExpensesPage() {
   const queryClient = useQueryClient()
+  const t = useTranslations('expenses')
+  const tc = useTranslations('common')
+  const tcat = useTranslations('categories')
+  const apiError = useApiError()
+  const fmt = useFormat()
   const { data: expenses, isLoading } = useQuery({ queryKey: ['expenses'], queryFn: fetchExpenses })
   const currentYear = new Date().getFullYear()
   const { data: categoryData } = useQuery({
@@ -98,7 +104,7 @@ export default function ExpensesPage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(errorMessage(body, 'Greška pri čuvanju troška'))
+      alert(apiError(body, t('saveError')))
       return
     }
     setModalOpen(false)
@@ -137,42 +143,42 @@ export default function ExpensesPage() {
     setSaving(false)
     if (failed.length > 0) {
       setRows(failed)
-      alert(`${failed.length} od ${rows.length} troška nije sačuvano. Ostali su u formi — pokušajte ponovo.`)
+      alert(t('partialSaveError', { failed: failed.length, total: rows.length }))
       return
     }
     setModalOpen(false)
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Obrisati trošak?')) return
+    if (!confirm(t('confirmDelete'))) return
     const response = await fetch(`/api/expenses/${id}`, { method: 'DELETE' })
     if (!response.ok) {
-      alert('Greška pri brisanju troška')
+      alert(t('deleteError'))
       return
     }
     queryClient.invalidateQueries({ queryKey: ['expenses'] })
     queryClient.invalidateQueries({ queryKey: ['dashboard-expenses', currentYear] })
   }
 
-  if (isLoading) return <p className="text-muted">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">{tc('loading')}</p>
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-heading">Troškovi</h1>
-        <Button onClick={openCreate}>+ Novi trošak</Button>
+        <h1 className="text-lg font-semibold text-heading">{t('title')}</h1>
+        <Button onClick={openCreate}>{t('new')}</Button>
       </div>
 
       {categoryData && (
         <div className="rounded-card border border-line bg-surface p-4">
-          <h2 className="mb-4 text-md font-semibold text-heading">Troškovi po kategoriji ({currentYear})</h2>
+          <h2 className="mb-4 text-md font-semibold text-heading">{t('byCategory', { year: currentYear })}</h2>
           <ExpensesByCategoryChart data={categoryData} />
         </div>
       )}
 
       <div className="flex items-center justify-between gap-4">
         <input
-          placeholder="Pretraga po nazivu..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
@@ -181,27 +187,27 @@ export default function ExpensesPage() {
           className="w-full max-w-sm rounded-card border border-line bg-surface px-3 py-2 text-fg"
         />
         <span className="whitespace-nowrap text-sm text-muted">
-          Prikazano {filtered.length} od {expenses?.length ?? 0}
+          {tc('showing', { shown: filtered.length, total: expenses?.length ?? 0 })}
         </span>
       </div>
 
       <Table<Expense>
         rows={pageItems}
         columns={[
-          { key: 'date', label: 'Datum', render: (row) => new Date(row.expenseDate).toLocaleDateString('sr-RS') },
-          { key: 'description', label: 'Naziv', render: (row) => row.description },
-          { key: 'category', label: 'Kategorija', render: (row) => EXPENSE_CATEGORY_LABELS[row.category] },
-          { key: 'amount', label: 'Iznos', render: (row) => formatRsd(Number(row.amount)) },
+          { key: 'date', label: tc('date'), render: (row) => fmt.date(row.expenseDate) },
+          { key: 'description', label: tc('name'), render: (row) => row.description },
+          { key: 'category', label: tc('category'), render: (row) => tcat(row.category) },
+          { key: 'amount', label: tc('amount'), render: (row) => fmt.rsd(Number(row.amount)) },
           {
             key: 'actions',
             label: '',
             render: (row) => (
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={() => openEdit(row)}>
-                  Izmeni
+                  {tc('edit')}
                 </Button>
                 <Button variant="danger" onClick={() => handleDelete(row.id)}>
-                  Obriši
+                  {tc('delete')}
                 </Button>
               </div>
             ),
@@ -212,9 +218,9 @@ export default function ExpensesPage() {
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
       {editing ? (
-        <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Izmena troška">
+        <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t('editTitle')}>
           <form onSubmit={handleEditSubmit}>
-            <Field label="Datum" htmlFor="expenseDate">
+            <Field label={tc('date')} htmlFor="expenseDate">
               <input
                 id="expenseDate"
                 type="date"
@@ -224,7 +230,7 @@ export default function ExpensesPage() {
                 required
               />
             </Field>
-            <Field label="Naziv" htmlFor="description">
+            <Field label={tc('name')} htmlFor="description">
               <input
                 id="description"
                 value={description}
@@ -233,7 +239,7 @@ export default function ExpensesPage() {
                 required
               />
             </Field>
-            <Field label="Iznos (RSD)" htmlFor="amount">
+            <Field label={tc('amountRsd')} htmlFor="amount">
               <input
                 id="amount"
                 type="number"
@@ -243,7 +249,7 @@ export default function ExpensesPage() {
                 required
               />
             </Field>
-            <Field label="Kategorija" htmlFor="category">
+            <Field label={tc('category')} htmlFor="category">
               <select
                 id="category"
                 value={category}
@@ -253,38 +259,38 @@ export default function ExpensesPage() {
               >
                 {EXPENSE_CATEGORIES.map((value) => (
                   <option key={value} value={value}>
-                    {EXPENSE_CATEGORY_LABELS[value]}
+                    {tcat(value)}
                   </option>
                 ))}
               </select>
             </Field>
             <Button type="submit" className="w-full">
-              Sačuvaj
+              {tc('save')}
             </Button>
           </form>
         </Modal>
       ) : (
-        <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Novi trošak" size="lg">
+        <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t('newTitle')} size="lg">
           <form onSubmit={handleCreateSubmit} className="flex flex-col gap-3">
             <div className="hidden gap-2 px-1 text-xs text-muted sm:grid sm:grid-cols-[1fr_2fr_1fr_1.4fr_auto]">
-              <span>Datum</span>
-              <span>Naziv</span>
-              <span>Iznos (RSD)</span>
-              <span>Kategorija</span>
+              <span>{tc('date')}</span>
+              <span>{tc('name')}</span>
+              <span>{tc('amountRsd')}</span>
+              <span>{tc('category')}</span>
               <span />
             </div>
             {rows.map((row, index) => (
               <div key={row.localId} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_2fr_1fr_1.4fr_auto] sm:items-center">
                 <input
                   type="date"
-                  aria-label="Datum"
+                  aria-label={tc('date')}
                   value={row.expenseDate}
                   onChange={(event) => updateRow(row.localId, { expenseDate: event.target.value })}
                   className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
                   required
                 />
                 <input
-                  aria-label="Naziv"
+                  aria-label={tc('name')}
                   value={row.description}
                   onChange={(event) => updateRow(row.localId, { description: event.target.value })}
                   className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
@@ -292,14 +298,14 @@ export default function ExpensesPage() {
                 />
                 <input
                   type="number"
-                  aria-label="Iznos (RSD)"
+                  aria-label={tc('amountRsd')}
                   value={row.amount}
                   onChange={(event) => updateRow(row.localId, { amount: event.target.value })}
                   className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
                   required
                 />
                 <select
-                  aria-label="Kategorija"
+                  aria-label={tc('category')}
                   value={row.category}
                   onChange={(event) => updateRow(row.localId, { category: event.target.value as ExpenseCategory })}
                   className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
@@ -307,12 +313,12 @@ export default function ExpensesPage() {
                 >
                   {EXPENSE_CATEGORIES.map((value) => (
                     <option key={value} value={value}>
-                      {EXPENSE_CATEGORY_LABELS[value]}
+                      {tcat(value)}
                     </option>
                   ))}
                 </select>
                 {index === rows.length - 1 ? (
-                  <Button type="button" onClick={addRow} aria-label="Dodaj red">
+                  <Button type="button" onClick={addRow} aria-label={t('addRow')}>
                     +
                   </Button>
                 ) : (
@@ -320,7 +326,7 @@ export default function ExpensesPage() {
                     type="button"
                     variant="secondary"
                     onClick={() => removeRow(row.localId)}
-                    aria-label="Ukloni red"
+                    aria-label={t('removeRow')}
                   >
                     ✕
                   </Button>
@@ -328,7 +334,7 @@ export default function ExpensesPage() {
               </div>
             ))}
             <Button type="submit" className="mt-2 w-full" disabled={saving}>
-              {saving ? 'Čuvanje...' : 'Sačuvaj'}
+              {saving ? tc('saving') : tc('save')}
             </Button>
           </form>
         </Modal>

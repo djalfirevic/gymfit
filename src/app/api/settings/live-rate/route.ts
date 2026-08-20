@@ -15,15 +15,15 @@ export async function GET() {
   try {
     const response = await fetch(LIVE_RATE_URL, { signal: AbortSignal.timeout(5000) })
     if (!response.ok) {
-      return NextResponse.json({ error: 'Spoljni servis za kurs nije dostupan' }, { status: 502 })
+      return NextResponse.json({ error: 'RATE_SERVICE_UNAVAILABLE' }, { status: 502 })
     }
     const body = (await response.json()) as { result?: string; rates?: { RSD?: number } }
     const rate = body.rates?.RSD
     if (body.result !== 'success' || typeof rate !== 'number' || !(rate > 0)) {
-      return NextResponse.json({ error: 'Neočekivan odgovor od servisa za kurs' }, { status: 502 })
+      return NextResponse.json({ error: 'RATE_SERVICE_BAD_RESPONSE' }, { status: 502 })
     }
     return NextResponse.json({ rate: Math.round(rate * 10000) / 10000 })
   } catch {
-    return NextResponse.json({ error: 'Greška pri povezivanju sa servisom za kurs' }, { status: 502 })
+    return NextResponse.json({ error: 'RATE_SERVICE_ERROR' }, { status: 502 })
   }
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { IBM_Plex_Mono, Public_Sans } from 'next/font/google'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale } from 'next-intl/server'
 import './globals.css'
 import { Providers } from './providers'
 import { THEME_BOOT_SCRIPT } from '@/lib/theme'
@@ -25,15 +27,23 @@ export const metadata: Metadata = {
   description: 'Interni dashboard za vođenje teretane',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
+
   return (
-    <html lang="sr" className={`${publicSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
+    <html
+      lang={locale}
+      className={`${publicSans.variable} ${plexMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Sets data-theme before first paint so there is no flash of the wrong theme. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

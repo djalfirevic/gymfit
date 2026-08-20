@@ -1,12 +1,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { ItemCountsChart } from '@/components/charts/ItemCountsChart'
 import { MonthlyBarChart } from '@/components/charts/MonthlyBarChart'
 import { StatCard } from '@/components/ui/StatCard'
+import { useMonthNames } from '@/lib/use-month-labels'
 import { Table } from '@/components/ui/Table'
-import { formatEur, formatRsd } from '@/lib/currency'
+import { useFormat } from '@/lib/use-format'
 
 type DashboardResponse = {
   year: number
@@ -45,22 +47,12 @@ async function fetchExpenses(): Promise<Expense[]> {
   return response.json()
 }
 
-const MONTH_NAMES = [
-  'Januar',
-  'Februar',
-  'Mart',
-  'April',
-  'Maj',
-  'Jun',
-  'Jul',
-  'Avgust',
-  'Septembar',
-  'Oktobar',
-  'Novembar',
-  'Decembar',
-]
 
 export default function StatisticsPage() {
+  const t = useTranslations('statistics')
+  const tc = useTranslations('common')
+  const MONTH_NAMES = useMonthNames()
+  const fmt = useFormat()
   const currentYear = new Date().getFullYear()
   const [year, setYear] = useState(currentYear)
   const years = Array.from({ length: currentYear - 2024 + 1 }, (_, index) => 2024 + index).reverse()
@@ -74,10 +66,10 @@ export default function StatisticsPage() {
   const { data: expenses, isLoading: expensesLoading } = useQuery({ queryKey: ['expenses'], queryFn: fetchExpenses })
 
   if (dashboardLoading || productsLoading || salesLoading || expensesLoading) {
-    return <p className="text-muted">Učitavanje...</p>
+    return <p className="text-muted">{tc('loading')}</p>
   }
   if (!dashboard || !products || !sales || !expenses) {
-    return <p className="text-muted">Greška pri učitavanju podataka.</p>
+    return <p className="text-muted">{tc('loadError')}</p>
   }
 
   const productById = new Map(products.map((product) => [product.id, product]))
@@ -102,7 +94,7 @@ export default function StatisticsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-heading">Statistika</h1>
+        <h1 className="text-lg font-semibold text-heading">{t('title')}</h1>
         <select
           value={year}
           onChange={(event) => setYear(Number(event.target.value))}
@@ -118,49 +110,49 @@ export default function StatisticsPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="rounded-card border border-line bg-surface p-4">
-          <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima ({year})</h2>
+          <h2 className="mb-4 text-md font-semibold text-heading">{t('earningsByMonthYear', { year })}</h2>
           <Table<{ id: number; month: string; zarada: string; troskovi: string; stanje: string; podela: string }>
             rows={dashboard.rollup.map((row) => ({
               id: row.month,
               month: MONTH_NAMES[row.month - 1],
-              zarada: formatRsd(row.zarada),
-              troskovi: formatRsd(row.troskovi),
-              stanje: formatRsd(row.stanje),
-              podela: formatRsd(row.podela),
+              zarada: fmt.rsd(row.zarada),
+              troskovi: fmt.rsd(row.troskovi),
+              stanje: fmt.rsd(row.stanje),
+              podela: fmt.rsd(row.podela),
             }))}
             columns={[
               { key: 'month', label: '', render: (row) => row.month },
-              { key: 'zarada', label: 'Zarada', render: (row) => row.zarada },
-              { key: 'troskovi', label: 'Troškovi', render: (row) => row.troskovi },
-              { key: 'stanje', label: 'Stanje', render: (row) => row.stanje },
-              { key: 'podela', label: 'Podela', render: (row) => row.podela },
+              { key: 'zarada', label: t('zarada'), render: (row) => row.zarada },
+              { key: 'troskovi', label: t('troskovi'), render: (row) => row.troskovi },
+              { key: 'stanje', label: t('stanje'), render: (row) => row.stanje },
+              { key: 'podela', label: t('podela'), render: (row) => row.podela },
             ]}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4 content-start md:grid-cols-4">
-          <StatCard label="Članova" value={String(dashboard.memberCounts.total)} />
-          <StatCard label="Neobnovljene" value={String(dashboard.memberCounts.notRenewed)} />
-          <StatCard label="Aktivni" value={String(dashboard.memberCounts.active)} />
+          <StatCard label={t('membersTotal')} value={String(dashboard.memberCounts.total)} />
+          <StatCard label={t('notRenewed')} value={String(dashboard.memberCounts.notRenewed)} />
+          <StatCard label={t('active')} value={String(dashboard.memberCounts.active)} />
           <StatCard label="Dnevni termin" value={String(countByProduct.get('Dnevni termin') ?? 0)} />
           <StatCard label="Kolagen" value={String(countByProduct.get('Kolagen') ?? 0)} />
           <StatCard label="Nocco" value={String(countByProduct.get('Nocco') ?? 0)} />
           <StatCard label="Čokoladica" value={String(countByProduct.get('Čokoladica') ?? 0)} />
           <StatCard label="Pre-workout" value={String(countByProduct.get('Pre-workout') ?? 0)} />
-          <StatCard label="Dnevnica" value={String(dnevnicaCount)} />
-          <StatCard label="Čišćenje" value={String(ciscenjeCount)} />
-          <StatCard label={`Ukupna zarada (${year})`} value={formatEur(dashboard.yearlyTotals.ukupnaZaradaEur)} />
-          <StatCard label={`Zarada (${year})`} value={formatEur(dashboard.yearlyTotals.zaradaEur)} />
+          <StatCard label={t('dnevnica')} value={String(dnevnicaCount)} />
+          <StatCard label={t('ciscenje')} value={String(ciscenjeCount)} />
+          <StatCard label={`${t('totalEarnings')} (${year})`} value={fmt.eur(dashboard.yearlyTotals.ukupnaZaradaEur)} />
+          <StatCard label={`${t('zarada')} (${year})`} value={fmt.eur(dashboard.yearlyTotals.zaradaEur)} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="rounded-card border border-line bg-surface p-4">
-          <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima</h2>
+          <h2 className="mb-4 text-md font-semibold text-heading">{t('earningsByMonth')}</h2>
           <MonthlyBarChart data={dashboard.rollup.map((row) => ({ month: row.month, value: row.zarada }))} tone="primary" />
         </div>
         <div className="rounded-card border border-line bg-surface p-4">
-          <h2 className="mb-4 text-md font-semibold text-heading">Troškovi po mesecima</h2>
+          <h2 className="mb-4 text-md font-semibold text-heading">{t('expensesByMonth')}</h2>
           <MonthlyBarChart
             data={dashboard.rollup.map((row) => ({ month: row.month, value: row.troskovi }))}
             tone="danger"
@@ -169,7 +161,7 @@ export default function StatisticsPage() {
       </div>
 
       <div className="rounded-card border border-line bg-surface p-4">
-        <h2 className="mb-4 text-md font-semibold text-heading">Stavke</h2>
+        <h2 className="mb-4 text-md font-semibold text-heading">{t('items')}</h2>
         <ItemCountsChart data={itemCountsData} />
       </div>
     </div>

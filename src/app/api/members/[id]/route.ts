@@ -15,7 +15,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
   const member = await updateMember(Number(id), body.data)
   if (!member) {
-    return NextResponse.json({ error: 'Član nije pronađen' }, { status: 404 })
+    return NextResponse.json({ error: 'MEMBER_NOT_FOUND' }, { status: 404 })
   }
   return NextResponse.json(member)
 }
@@ -38,7 +38,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   } catch (error) {
     if (isForeignKeyViolation(error)) {
       return NextResponse.json(
-        { error: 'Član ima povezane uplate i ne može biti obrisan' },
+        { error: 'MEMBER_HAS_PAYMENTS' },
         { status: 409 },
       )
     }

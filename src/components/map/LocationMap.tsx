@@ -2,6 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import { useTheme } from '@/lib/theme'
@@ -50,6 +51,7 @@ export function LocationMap({
   selectedId: number | null
 }) {
   const theme = useTheme()
+  const t = useTranslations('locations')
 
   const points = locations
     .map((location) => ({ location, lat: Number(location.latitude), lng: Number(location.longitude) }))
@@ -58,7 +60,7 @@ export function LocationMap({
   if (points.length === 0) {
     return (
       <div className="grid h-[420px] place-items-center rounded-card border border-line bg-surface-2 text-muted">
-        Nema lokacija za prikaz
+        {t('mapEmpty')}
       </div>
     )
   }

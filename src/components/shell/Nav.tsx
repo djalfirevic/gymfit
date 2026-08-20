@@ -3,23 +3,25 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 import { QuickAdd } from '@/components/shell/QuickAdd'
 
 const LINKS = [
-  { href: '/dashboard', label: 'Pregled' },
-  { href: '/statistics', label: 'Statistika' },
-  { href: '/members', label: 'Članovi' },
-  { href: '/payments', label: 'Uplate' },
-  { href: '/store', label: 'Prodavnica' },
-  { href: '/expenses', label: 'Troškovi' },
-  { href: '/investments', label: 'Investicije' },
-  { href: '/locations', label: 'Lokacije' },
-  { href: '/settings', label: 'Podešavanja' },
-]
+  { href: '/dashboard', key: 'overview' },
+  { href: '/statistics', key: 'statistics' },
+  { href: '/members', key: 'members' },
+  { href: '/payments', key: 'payments' },
+  { href: '/store', key: 'store' },
+  { href: '/expenses', key: 'expenses' },
+  { href: '/investments', key: 'investments' },
+  { href: '/locations', key: 'locations' },
+  { href: '/settings', key: 'settings' },
+] as const
 
 export function Nav() {
   const pathname = usePathname()
   const router = useRouter()
+  const t = useTranslations('nav')
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -40,7 +42,7 @@ export function Nav() {
         <QuickAdd />
       </div>
 
-      <div className="px-5 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">Meni</div>
+      <div className="px-5 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">{t('menu')}</div>
 
       <div className="flex flex-col gap-px px-3">
         {LINKS.map((link) => (
@@ -54,7 +56,7 @@ export function Nav() {
                 : 'text-muted hover:bg-primary-soft hover:text-primary',
             )}
           >
-            {link.label}
+            {t(link.key)}
           </Link>
         ))}
       </div>
@@ -64,7 +66,7 @@ export function Nav() {
         onClick={handleLogout}
         className="mt-auto mx-3 mb-4 rounded-card px-2.5 py-2 text-left text-base font-medium text-muted transition-colors hover:bg-primary-soft hover:text-primary"
       >
-        Odjavi se
+        {t('logout')}
       </button>
     </nav>
   )

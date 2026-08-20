@@ -18,7 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
   const expense = await updateExpense(Number(id), body.data)
   if (!expense) {
-    return NextResponse.json({ error: 'Trošak nije pronađen' }, { status: 404 })
+    return NextResponse.json({ error: 'EXPENSE_NOT_FOUND' }, { status: 404 })
   }
   return NextResponse.json(expense)
 }

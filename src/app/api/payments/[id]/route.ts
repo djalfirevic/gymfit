@@ -12,7 +12,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
   const payment = await relinkPayment(Number(id), body.data.memberId)
   if (!payment) {
-    return NextResponse.json({ error: 'Uplata nije pronađena' }, { status: 404 })
+    return NextResponse.json({ error: 'PAYMENT_NOT_FOUND' }, { status: 404 })
   }
   return NextResponse.json(payment)
 }

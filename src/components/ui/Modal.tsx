@@ -1,6 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 
 export function Modal({
   open,
@@ -15,6 +16,8 @@ export function Modal({
   size?: 'md' | 'lg'
   children: React.ReactNode
 }) {
+  const t = useTranslations('common')
+
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -27,7 +30,7 @@ export function Modal({
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 className="text-md font-semibold text-heading">{title}</h2>
-          <button onClick={onClose} className="text-muted transition-colors hover:text-fg" aria-label="Zatvori">
+          <button onClick={onClose} className="text-muted transition-colors hover:text-fg" aria-label={t('close')}>
             ✕
           </button>
         </div>

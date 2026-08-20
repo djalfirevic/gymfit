@@ -1,9 +1,11 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { setTheme, useTheme } from '@/lib/theme'
 
 export function ThemeToggle() {
   const theme = useTheme()
+  const t = useTranslations('theme')
   const isDark = theme === 'dark'
 
   return (
@@ -11,8 +13,8 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className="grid h-8 w-8 place-items-center rounded-card border border-line text-muted transition-colors hover:border-primary hover:text-primary"
-      aria-label={isDark ? 'Uključi svetlu temu' : 'Uključi tamnu temu'}
-      title={isDark ? 'Svetla tema' : 'Tamna tema'}
+      aria-label={isDark ? t('toLight') : t('toDark')}
+      title={isDark ? t('light') : t('dark')}
     >
       {isDark ? (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-4 w-4">

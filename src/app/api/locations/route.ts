@@ -12,7 +12,7 @@ const coordinate = (max: number) =>
     .refine((value) => {
       const parsed = Number(value)
       return Number.isFinite(parsed) && Math.abs(parsed) <= max
-    }, `Koordinata mora biti broj između -${max} i ${max}`)
+    }, max === 90 ? 'INVALID_LATITUDE' : 'INVALID_LONGITUDE')
 
 const createSchema = z.object({
   name: z.string().min(1),

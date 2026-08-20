@@ -1,14 +1,16 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Pagination } from '@/components/ui/Pagination'
 import { Table } from '@/components/ui/Table'
-import { errorMessage } from '@/lib/api-error'
+import { useApiError } from '@/lib/use-api-error'
 import { toDateKey } from '@/lib/dates'
+import { useFormat } from '@/lib/use-format'
 import { usePagination } from '@/lib/use-pagination'
 
 type Member = { id: number; fullName: string; membershipRenewalDate: string }
@@ -21,6 +23,10 @@ async function fetchMembers(): Promise<Member[]> {
 
 export default function MembersPage() {
   const queryClient = useQueryClient()
+  const t = useTranslations('members')
+  const tc = useTranslations('common')
+  const apiError = useApiError()
+  const fmt = useFormat()
   const { data, isLoading } = useQuery({ queryKey: ['members'], queryFn: fetchMembers })
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
@@ -64,7 +70,7 @@ export default function MembersPage() {
         })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(errorMessage(body, 'Greška pri čuvanju člana'))
+      alert(apiError(body, t('saveError')))
       return
     }
     setModalOpen(false)
@@ -72,27 +78,27 @@ export default function MembersPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Obrisati člana?')) return
+    if (!confirm(t('confirmDelete'))) return
     const response = await fetch(`/api/members/${id}`, { method: 'DELETE' })
     if (!response.ok) {
-      alert('Greška pri brisanju člana')
+      alert(t('deleteError'))
       return
     }
     queryClient.invalidateQueries({ queryKey: ['members'] })
   }
 
-  if (isLoading) return <p className="text-muted">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">{tc('loading')}</p>
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-heading">Članovi</h1>
-        <Button onClick={openCreate}>+ Novi član</Button>
+        <h1 className="text-lg font-semibold text-heading">{t('title')}</h1>
+        <Button onClick={openCreate}>{t('new')}</Button>
       </div>
 
       <div className="flex items-center justify-between gap-4">
         <input
-          placeholder="Pretraga po imenu..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
@@ -101,22 +107,22 @@ export default function MembersPage() {
           className="w-full max-w-sm rounded-card border border-line bg-surface px-3 py-2 text-fg"
         />
         <span className="whitespace-nowrap text-sm text-muted">
-          Prikazano {filtered.length} od {data?.length ?? 0}
+          {tc('showing', { shown: filtered.length, total: data?.length ?? 0 })}
         </span>
       </div>
 
       <Table<Member>
         rows={pageItems}
         columns={[
-          { key: 'fullName', label: 'Ime i prezime', render: (row) => row.fullName },
+          { key: 'fullName', label: t('fullName'), render: (row) => row.fullName },
           {
             key: 'renewal',
-            label: 'Obnova članarine',
+            label: t('renewal'),
             render: (row) => {
               const overdue = toDateKey(new Date(row.membershipRenewalDate)) < toDateKey(new Date())
               return (
                 <span className={overdue ? 'font-medium text-danger' : 'text-fg'}>
-                  {new Date(row.membershipRenewalDate).toLocaleDateString('sr-RS')}
+                  {fmt.date(row.membershipRenewalDate)}
                 </span>
               )
             },
@@ -127,10 +133,10 @@ export default function MembersPage() {
             render: (row) => (
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={() => openEdit(row)}>
-                  Izmeni
+                  {tc('edit')}
                 </Button>
                 <Button variant="danger" onClick={() => handleDelete(row.id)}>
-                  Obriši
+                  {tc('delete')}
                 </Button>
               </div>
             ),
@@ -140,9 +146,9 @@ export default function MembersPage() {
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Izmena člana' : 'Novi član'}>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? t('editTitle') : t('newTitle')}>
         <form onSubmit={handleSubmit}>
-          <Field label="Ime i prezime" htmlFor="fullName">
+          <Field label={t('fullName')} htmlFor="fullName">
             <input
               id="fullName"
               value={fullName}
@@ -151,7 +157,7 @@ export default function MembersPage() {
               required
             />
           </Field>
-          <Field label="Obnova članarine" htmlFor="renewalDate">
+          <Field label={t('renewal')} htmlFor="renewalDate">
             <input
               id="renewalDate"
               type="date"
@@ -162,7 +168,7 @@ export default function MembersPage() {
             />
           </Field>
           <Button type="submit" className="w-full">
-            Sačuvaj
+            {tc('save')}
           </Button>
         </form>
       </Modal>

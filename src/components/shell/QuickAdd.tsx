@@ -1,12 +1,13 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
-import { errorMessage } from '@/lib/api-error'
-import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type ExpenseCategory } from '@/lib/expenses/categorize'
+import { useApiError } from '@/lib/use-api-error'
+import { EXPENSE_CATEGORIES, type ExpenseCategory } from '@/lib/expenses/categorize'
 import { normalizeName } from '@/lib/import/match-member'
 
 type Member = { id: number; fullName: string }
@@ -30,10 +31,21 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function summarize(entry: QueuedEntry): string {
-  if (entry.type === 'sale') return `Prodaja: ${entry.productName} × ${entry.quantity} (${entry.price} RSD) — ${entry.soldAt}`
-  if (entry.type === 'expense') return `Trošak: ${entry.description} (${entry.amount} RSD) — ${entry.expenseDate}`
-  return `Uplata: ${entry.memberNameRaw} (${entry.amount} RSD, važi do ${entry.renewalUntil})`
+type Translate = (key: string, values?: Record<string, string | number>) => string
+
+function summarize(entry: QueuedEntry, t: Translate): string {
+  if (entry.type === 'sale') {
+    return t('summarySale', {
+      product: entry.productName,
+      quantity: entry.quantity,
+      price: entry.price,
+      date: entry.soldAt,
+    })
+  }
+  if (entry.type === 'expense') {
+    return t('summaryExpense', { description: entry.description, amount: entry.amount, date: entry.expenseDate })
+  }
+  return t('summaryPayment', { member: entry.memberNameRaw, amount: entry.amount, until: entry.renewalUntil })
 }
 
 async function fetchMembers(): Promise<Member[]> {
@@ -50,6 +62,12 @@ async function fetchProducts(): Promise<Product[]> {
 
 export function QuickAdd() {
   const queryClient = useQueryClient()
+  const t = useTranslations('quickAdd')
+  const tc = useTranslations('common')
+  const tcat = useTranslations('categories')
+  const tnav = useTranslations('nav')
+  const tstore = useTranslations('store')
+  const apiError = useApiError()
   const [open, setOpen] = useState(false)
   const [activeType, setActiveType] = useState<EntryType>('memberPayment')
   const [queue, setQueue] = useState<QueuedEntry[]>([])
@@ -115,7 +133,7 @@ export function QuickAdd() {
       })
       const body = await response.json().catch(() => ({}))
       if (!response.ok) {
-        alert(errorMessage(body, 'Greška pri dodavanju člana'))
+        alert(apiError(body, t('memberSaveError')))
         return
       }
       setLocallyAddedMembers((current) => [...current, { id: body.id, fullName: body.fullName }])
@@ -236,7 +254,7 @@ export function QuickAdd() {
     setSaving(false)
     if (failed.length > 0) {
       setQueue(failed)
-      alert(`${failed.length} od ${queue.length} stavki nije sačuvano. Ostale su u listi — pokušajte ponovo.`)
+      alert(t('partialSaveError', { failed: failed.length, total: queue.length }))
       return
     }
     closeAndReset()
@@ -245,26 +263,26 @@ export function QuickAdd() {
   return (
     <>
       <Button onClick={() => setOpen(true)} className="w-full">
-        + Novi upis
+        {tnav('newEntry')}
       </Button>
 
-      <Modal open={open} onClose={closeAndReset} title="Novi upis" size="lg">
+      <Modal open={open} onClose={closeAndReset} title={t('title')} size="lg">
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <Button variant={activeType === 'memberPayment' ? 'primary' : 'secondary'} onClick={() => setActiveType('memberPayment')}>
-              Član + uplata
+              {t('memberPayment')}
             </Button>
             <Button variant={activeType === 'sale' ? 'primary' : 'secondary'} onClick={() => setActiveType('sale')}>
-              Prodaja
+              {t('sale')}
             </Button>
             <Button variant={activeType === 'expense' ? 'primary' : 'secondary'} onClick={() => setActiveType('expense')}>
-              Trošak
+              {t('expense')}
             </Button>
           </div>
 
           {activeType === 'memberPayment' && (
             <div className="flex flex-col gap-2 rounded-card border border-line p-3">
-              <Field label="Ime člana" htmlFor="qa-member-name">
+              <Field label={t('memberNameLabel')} htmlFor="qa-member-name">
                 <input
                   id="qa-member-name"
                   value={memberNameRaw}
@@ -283,13 +301,13 @@ export function QuickAdd() {
               </Field>
               {showNewMemberPrompt && (
                 <div className="flex items-center justify-between rounded-card bg-surface-2 px-3 py-2 text-sm text-warning">
-                  <span>Novi član?</span>
+                  <span>{t('newMemberPrompt')}</span>
                   <Button type="button" onClick={handleCreateMember} disabled={creatingMember}>
-                    {creatingMember ? '...' : 'Dodaj člana'}
+                    {creatingMember ? '...' : t('addMember')}
                   </Button>
                 </div>
               )}
-              <Field label="Iznos (RSD)" htmlFor="qa-payment-amount">
+              <Field label={tc('amountRsd')} htmlFor="qa-payment-amount">
                 <input
                   id="qa-payment-amount"
                   type="number"
@@ -298,7 +316,7 @@ export function QuickAdd() {
                   className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
-              <Field label="Važi do" htmlFor="qa-renewal-until">
+              <Field label={t('validUntil')} htmlFor="qa-renewal-until">
                 <input
                   id="qa-renewal-until"
                   type="date"
@@ -313,14 +331,14 @@ export function QuickAdd() {
                 onClick={addMemberPaymentToQueue}
                 disabled={!memberId || !paymentAmount || !renewalUntil}
               >
-                Dodaj u listu
+                {t('addToList')}
               </Button>
             </div>
           )}
 
           {activeType === 'sale' && (
             <div className="flex flex-col gap-2 rounded-card border border-line p-3">
-              <Field label="Proizvod" htmlFor="qa-sale-product">
+              <Field label={tstore('product')} htmlFor="qa-sale-product">
                 <select
                   id="qa-sale-product"
                   value={saleProductId}
@@ -328,7 +346,7 @@ export function QuickAdd() {
                   className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 >
                   <option value="" disabled>
-                    Izaberi proizvod
+                    {t('chooseProduct')}
                   </option>
                   {(products ?? []).map((product) => (
                     <option key={product.id} value={product.id}>
@@ -337,7 +355,7 @@ export function QuickAdd() {
                   ))}
                 </select>
               </Field>
-              <Field label="Datum" htmlFor="qa-sale-date">
+              <Field label={tc('date')} htmlFor="qa-sale-date">
                 <input
                   id="qa-sale-date"
                   type="date"
@@ -346,7 +364,7 @@ export function QuickAdd() {
                   className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
-              <Field label="Cena (RSD)" htmlFor="qa-sale-price">
+              <Field label={tc('priceRsd')} htmlFor="qa-sale-price">
                 <input
                   id="qa-sale-price"
                   type="number"
@@ -355,7 +373,7 @@ export function QuickAdd() {
                   className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
-              <Field label="Količina" htmlFor="qa-sale-quantity">
+              <Field label={tc('quantity')} htmlFor="qa-sale-quantity">
                 <input
                   id="qa-sale-quantity"
                   type="number"
@@ -366,14 +384,14 @@ export function QuickAdd() {
                 />
               </Field>
               <Button type="button" variant="secondary" onClick={addSaleToQueue} disabled={!saleProductId || !salePrice}>
-                Dodaj u listu
+                {t('addToList')}
               </Button>
             </div>
           )}
 
           {activeType === 'expense' && (
             <div className="flex flex-col gap-2 rounded-card border border-line p-3">
-              <Field label="Datum" htmlFor="qa-expense-date">
+              <Field label={tc('date')} htmlFor="qa-expense-date">
                 <input
                   id="qa-expense-date"
                   type="date"
@@ -382,7 +400,7 @@ export function QuickAdd() {
                   className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
-              <Field label="Naziv" htmlFor="qa-expense-description">
+              <Field label={tc('name')} htmlFor="qa-expense-description">
                 <input
                   id="qa-expense-description"
                   value={expenseDescription}
@@ -390,7 +408,7 @@ export function QuickAdd() {
                   className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
-              <Field label="Iznos (RSD)" htmlFor="qa-expense-amount">
+              <Field label={tc('amountRsd')} htmlFor="qa-expense-amount">
                 <input
                   id="qa-expense-amount"
                   type="number"
@@ -399,7 +417,7 @@ export function QuickAdd() {
                   className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 />
               </Field>
-              <Field label="Kategorija" htmlFor="qa-expense-category">
+              <Field label={tc('category')} htmlFor="qa-expense-category">
                 <select
                   id="qa-expense-category"
                   value={expenseCategory}
@@ -408,7 +426,7 @@ export function QuickAdd() {
                 >
                   {EXPENSE_CATEGORIES.map((value) => (
                     <option key={value} value={value}>
-                      {EXPENSE_CATEGORY_LABELS[value]}
+                      {tcat(value)}
                     </option>
                   ))}
                 </select>
@@ -419,32 +437,32 @@ export function QuickAdd() {
                 onClick={addExpenseToQueue}
                 disabled={!expenseDescription || !expenseAmount}
               >
-                Dodaj u listu
+                {t('addToList')}
               </Button>
             </div>
           )}
 
           {queue.length > 0 && (
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold text-muted">Za čuvanje ({queue.length})</h3>
+              <h3 className="text-sm font-semibold text-muted">{t('queueTitle', { count: queue.length })}</h3>
               {queue.map((entry) => (
                 <div
                   key={entry.localId}
                   className="flex items-center justify-between rounded-card border border-line px-3 py-2 text-sm text-fg"
                 >
-                  <span>{summarize(entry)}</span>
+                  <span>{summarize(entry, t)}</span>
                   <button
                     type="button"
                     onClick={() => removeFromQueue(entry.localId)}
                     className="text-muted hover:text-fg"
-                    aria-label="Ukloni"
+                    aria-label={tc('remove')}
                   >
                     ✕
                   </button>
                 </div>
               ))}
               <Button onClick={handleSaveAll} disabled={saving}>
-                {saving ? 'Čuvanje...' : 'Sačuvaj sve'}
+                {saving ? tc('saving') : t('saveAll')}
               </Button>
             </div>
           )}

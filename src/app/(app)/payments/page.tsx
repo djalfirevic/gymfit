@@ -1,14 +1,15 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Pagination } from '@/components/ui/Pagination'
 import { Table } from '@/components/ui/Table'
-import { errorMessage } from '@/lib/api-error'
-import { formatRsd } from '@/lib/currency'
+import { useApiError } from '@/lib/use-api-error'
+import { useFormat } from '@/lib/use-format'
 import { usePagination } from '@/lib/use-pagination'
 
 type Payment = { id: number; memberId: number | null; memberNameRaw: string; paidAt: string; amount: string }
@@ -28,6 +29,10 @@ async function fetchMembers(): Promise<Member[]> {
 
 export default function PaymentsPage() {
   const queryClient = useQueryClient()
+  const t = useTranslations('payments')
+  const tc = useTranslations('common')
+  const apiError = useApiError()
+  const fmt = useFormat()
   const { data: payments, isLoading } = useQuery({ queryKey: ['payments'], queryFn: fetchPayments })
   const { data: members } = useQuery({ queryKey: ['members'], queryFn: fetchMembers })
   const [modalOpen, setModalOpen] = useState(false)
@@ -52,7 +57,7 @@ export default function PaymentsPage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(errorMessage(body, 'Greška pri čuvanju uplate'))
+      alert(apiError(body, t('saveError')))
       return
     }
     setModalOpen(false)
@@ -71,25 +76,25 @@ export default function PaymentsPage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(errorMessage(body, 'Greška pri povezivanju uplate'))
+      alert(apiError(body, t('relinkError')))
       return
     }
     setRelinking(null)
     queryClient.invalidateQueries({ queryKey: ['payments'] })
   }
 
-  if (isLoading) return <p className="text-muted">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">{tc('loading')}</p>
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-heading">Uplate</h1>
-        <Button onClick={() => setModalOpen(true)}>+ Nova uplata</Button>
+        <h1 className="text-lg font-semibold text-heading">{t('title')}</h1>
+        <Button onClick={() => setModalOpen(true)}>{t('new')}</Button>
       </div>
 
       <div className="flex items-center justify-between gap-4">
         <input
-          placeholder="Pretraga po imenu člana..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
@@ -98,34 +103,34 @@ export default function PaymentsPage() {
           className="w-full max-w-sm rounded-card border border-line bg-surface px-3 py-2 text-fg"
         />
         <span className="whitespace-nowrap text-sm text-muted">
-          Prikazano {filtered.length} od {payments?.length ?? 0}
+          {tc('showing', { shown: filtered.length, total: payments?.length ?? 0 })}
         </span>
       </div>
 
       <Table<Payment>
         rows={pageItems}
         columns={[
-          { key: 'member', label: 'Član', render: (row) => row.memberNameRaw },
+          { key: 'member', label: t('member'), render: (row) => row.memberNameRaw },
           {
             key: 'status',
             label: '',
             render: (row) =>
               row.memberId === null ? (
                 <button className="text-xs font-medium text-warning underline" onClick={() => setRelinking(row)}>
-                  Nije povezano — poveži
+                  {t('unlinked')}
                 </button>
               ) : null,
           },
-          { key: 'date', label: 'Datum', render: (row) => new Date(row.paidAt).toLocaleDateString('sr-RS') },
-          { key: 'amount', label: 'Iznos', render: (row) => formatRsd(Number(row.amount)) },
+          { key: 'date', label: tc('date'), render: (row) => fmt.date(row.paidAt) },
+          { key: 'amount', label: tc('amount'), render: (row) => fmt.rsd(Number(row.amount)) },
         ]}
       />
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nova uplata">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t('newTitle')}>
         <form onSubmit={handleSubmit}>
-          <Field label="Ime člana" htmlFor="memberNameRaw">
+          <Field label={t('memberName')} htmlFor="memberNameRaw">
             <input
               id="memberNameRaw"
               value={memberNameRaw}
@@ -140,7 +145,7 @@ export default function PaymentsPage() {
               ))}
             </datalist>
           </Field>
-          <Field label="Datum" htmlFor="paidAt">
+          <Field label={tc('date')} htmlFor="paidAt">
             <input
               id="paidAt"
               type="date"
@@ -150,7 +155,7 @@ export default function PaymentsPage() {
               required
             />
           </Field>
-          <Field label="Iznos (RSD)" htmlFor="amount">
+          <Field label={tc('amountRsd')} htmlFor="amount">
             <input
               id="amount"
               type="number"
@@ -161,12 +166,12 @@ export default function PaymentsPage() {
             />
           </Field>
           <Button type="submit" className="w-full">
-            Sačuvaj
+            {tc('save')}
           </Button>
         </form>
       </Modal>
 
-      <Modal open={relinking !== null} onClose={() => setRelinking(null)} title="Poveži uplatu sa članom">
+      <Modal open={relinking !== null} onClose={() => setRelinking(null)} title={t('relinkTitle')}>
         <div className="flex flex-col gap-2">
           {(members ?? []).map((member) => (
             <button

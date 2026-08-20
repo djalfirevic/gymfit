@@ -1,6 +1,7 @@
 'use client'
 
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { YearOverYearChart } from '@/components/charts/YearOverYearChart'
 import { YearOverYearStackedChart } from '@/components/charts/YearOverYearStackedChart'
@@ -8,8 +9,8 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { StatCard } from '@/components/ui/StatCard'
-import { errorMessage } from '@/lib/api-error'
-import { formatEur, formatRsd } from '@/lib/currency'
+import { useApiError } from '@/lib/use-api-error'
+import { useFormat } from '@/lib/use-format'
 
 type CapitalInvestment = { id: number; investedAt: string; amountEur: string; note: string | null }
 type InvestmentsResponse = { entries: CapitalInvestment[]; totalInvestedEur: number }
@@ -39,6 +40,10 @@ async function fetchSettings(): Promise<{ rsdToEurRate: number }> {
 
 export default function InvestmentsPage() {
   const queryClient = useQueryClient()
+  const t = useTranslations('investments')
+  const tc = useTranslations('common')
+  const apiError = useApiError()
+  const fmt = useFormat()
   const { data: investments, isLoading } = useQuery({ queryKey: ['investments'], queryFn: fetchInvestments })
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: currentYear - 2024 + 1 }, (_, index) => 2024 + index)
@@ -77,7 +82,7 @@ export default function InvestmentsPage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(errorMessage(body, 'Greška pri čuvanju ulaganja'))
+      alert(apiError(body, t('saveError')))
       return
     }
     setModalOpen(false)
@@ -87,56 +92,56 @@ export default function InvestmentsPage() {
     queryClient.invalidateQueries({ queryKey: ['investments'] })
   }
 
-  if (isLoading) return <p className="text-muted">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">{tc('loading')}</p>
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-heading">Investicije</h1>
-        <Button onClick={() => setModalOpen(true)}>+ Novo ulaganje</Button>
+        <h1 className="text-lg font-semibold text-heading">{t('title')}</h1>
+        <Button onClick={() => setModalOpen(true)}>{t('new')}</Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard
-          label="Uloženo"
-          value={formatEur(investments?.totalInvestedEur ?? 0)}
-          hint={rate ? formatRsd((investments?.totalInvestedEur ?? 0) * rate) : undefined}
+          label={t('invested')}
+          value={fmt.eur(investments?.totalInvestedEur ?? 0)}
+          hint={rate ? fmt.rsd((investments?.totalInvestedEur ?? 0) * rate) : undefined}
         />
         <StatCard
-          label="Ukupna zarada"
-          value={dashboardLoaded ? formatEur(lifetimeTotals.ukupnaZaradaEur) : '—'}
-          hint={dashboardLoaded && rate ? formatRsd(lifetimeTotals.ukupnaZaradaEur * rate) : undefined}
+          label={t('totalEarnings')}
+          value={dashboardLoaded ? fmt.eur(lifetimeTotals.ukupnaZaradaEur) : '—'}
+          hint={dashboardLoaded && rate ? fmt.rsd(lifetimeTotals.ukupnaZaradaEur * rate) : undefined}
         />
         <StatCard
-          label="Moja zarada"
-          value={dashboardLoaded ? formatEur(lifetimeTotals.zaradaEur) : '—'}
-          hint={dashboardLoaded && rate ? formatRsd(lifetimeTotals.zaradaEur * rate) : undefined}
+          label={t('myEarnings')}
+          value={dashboardLoaded ? fmt.eur(lifetimeTotals.zaradaEur) : '—'}
+          hint={dashboardLoaded && rate ? fmt.rsd(lifetimeTotals.zaradaEur * rate) : undefined}
         />
       </div>
 
       <div className="rounded-card border border-line bg-surface p-4">
-        <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima po godinama</h2>
+        <h2 className="mb-4 text-md font-semibold text-heading">{t('earningsByMonthByYear')}</h2>
         <YearOverYearChart data={yearOverYearData} valueKey="zarada" />
       </div>
 
       <div className="rounded-card border border-line bg-surface p-4">
-        <h2 className="mb-4 text-md font-semibold text-heading">Zarada po mesecima po godinama</h2>
+        <h2 className="mb-4 text-md font-semibold text-heading">{t('earningsByMonthByYear')}</h2>
         <YearOverYearStackedChart data={yearOverYearData} />
       </div>
 
       <div className="rounded-card border border-line bg-surface p-4">
-        <h2 className="mb-4 text-md font-semibold text-heading">Stanje po mesecima po godinama (posle troškova)</h2>
+        <h2 className="mb-4 text-md font-semibold text-heading">{t('balanceByMonthByYear')}</h2>
         <YearOverYearChart data={yearOverYearData} valueKey="stanje" />
       </div>
 
       <div className="rounded-card border border-line bg-surface p-4">
-        <h2 className="mb-4 text-md font-semibold text-heading">Podela po mesecima po godinama (Stanje / 2)</h2>
+        <h2 className="mb-4 text-md font-semibold text-heading">{t('splitByMonthByYear')}</h2>
         <YearOverYearChart data={yearOverYearData} valueKey="podela" />
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Novo ulaganje">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={t('newTitle')}>
         <form onSubmit={handleSubmit}>
-          <Field label="Datum" htmlFor="investedAt">
+          <Field label={tc('date')} htmlFor="investedAt">
             <input
               id="investedAt"
               type="date"
@@ -146,7 +151,7 @@ export default function InvestmentsPage() {
               required
             />
           </Field>
-          <Field label="Iznos (EUR)" htmlFor="amountEur">
+          <Field label={tc('amountEur')} htmlFor="amountEur">
             <input
               id="amountEur"
               type="number"
@@ -157,7 +162,7 @@ export default function InvestmentsPage() {
               required
             />
           </Field>
-          <Field label="Napomena" htmlFor="note">
+          <Field label={tc('note')} htmlFor="note">
             <input
               id="note"
               value={note}
@@ -166,7 +171,7 @@ export default function InvestmentsPage() {
             />
           </Field>
           <Button type="submit" className="w-full">
-            Sačuvaj
+            {tc('save')}
           </Button>
         </form>
       </Modal>

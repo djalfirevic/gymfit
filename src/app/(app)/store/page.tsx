@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { ProductCountsChart } from '@/components/charts/ProductCountsChart'
 import { Button } from '@/components/ui/Button'
@@ -8,8 +9,8 @@ import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { Pagination } from '@/components/ui/Pagination'
 import { Table } from '@/components/ui/Table'
-import { errorMessage } from '@/lib/api-error'
-import { formatRsd } from '@/lib/currency'
+import { useApiError } from '@/lib/use-api-error'
+import { useFormat } from '@/lib/use-format'
 import { usePagination } from '@/lib/use-pagination'
 
 type Product = { id: number; name: string; defaultPrice: string; active: boolean }
@@ -29,6 +30,10 @@ async function fetchSales(): Promise<Sale[]> {
 
 export default function StorePage() {
   const queryClient = useQueryClient()
+  const t = useTranslations('store')
+  const tc = useTranslations('common')
+  const apiError = useApiError()
+  const fmt = useFormat()
   const { data: products, isLoading: productsLoading } = useQuery({ queryKey: ['store-products'], queryFn: fetchProducts })
   const { data: sales, isLoading: salesLoading } = useQuery({ queryKey: ['store-sales'], queryFn: fetchSales })
 
@@ -52,7 +57,7 @@ export default function StorePage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(errorMessage(body, 'Greška pri čuvanju proizvoda'))
+      alert(apiError(body, t('productSaveError')))
       return
     }
     setProductModalOpen(false)
@@ -75,7 +80,7 @@ export default function StorePage() {
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(errorMessage(body, 'Greška pri čuvanju prodaje'))
+      alert(apiError(body, t('saleSaveError')))
       return
     }
     setSaleModalOpen(false)
@@ -99,7 +104,7 @@ export default function StorePage() {
   const { page: salesPage, totalPages: salesTotalPages, pageItems: salesPageItems, setPage: setSalesPage } =
     usePagination(filteredSales)
 
-  if (productsLoading || salesLoading) return <p className="text-muted">Učitavanje...</p>
+  if (productsLoading || salesLoading) return <p className="text-muted">{tc('loading')}</p>
 
   const currentYear = new Date().getFullYear()
   const chartData = (sales ?? [])
@@ -113,37 +118,37 @@ export default function StorePage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-heading">Prodavnica</h1>
+        <h1 className="text-lg font-semibold text-heading">{t('title')}</h1>
       </div>
 
       <div className="rounded-card border border-line bg-surface p-4">
-        <h2 className="mb-4 text-md font-semibold text-heading">Prodaja po proizvodu i mesecu ({currentYear})</h2>
+        <h2 className="mb-4 text-md font-semibold text-heading">{t('salesByProductAndMonth', { year: currentYear })}</h2>
         <ProductCountsChart data={chartData} />
       </div>
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-md font-semibold text-heading">Proizvodi</h2>
-          <Button onClick={() => setProductModalOpen(true)}>+ Novi proizvod</Button>
+          <h2 className="text-md font-semibold text-heading">{t('products')}</h2>
+          <Button onClick={() => setProductModalOpen(true)}>{t('newProduct')}</Button>
         </div>
         <Table<Product>
           rows={products ?? []}
           columns={[
-            { key: 'name', label: 'Naziv', render: (row) => row.name },
-            { key: 'price', label: 'Cena', render: (row) => formatRsd(Number(row.defaultPrice)) },
-            { key: 'active', label: 'Aktivan', render: (row) => (row.active ? 'Da' : 'Ne') },
+            { key: 'name', label: tc('name'), render: (row) => row.name },
+            { key: 'price', label: tc('price'), render: (row) => fmt.rsd(Number(row.defaultPrice)) },
+            { key: 'active', label: t('active'), render: (row) => (row.active ? tc('yes') : tc('no')) },
           ]}
         />
       </div>
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-md font-semibold text-heading">Prodaja</h2>
-          <Button onClick={() => setSaleModalOpen(true)}>+ Nova prodaja</Button>
+          <h2 className="text-md font-semibold text-heading">{t('sales')}</h2>
+          <Button onClick={() => setSaleModalOpen(true)}>{t('newSale')}</Button>
         </div>
         <div className="flex items-center justify-between gap-4">
           <input
-            placeholder="Pretraga po proizvodu..."
+            placeholder={t('searchPlaceholder')}
             value={saleSearch}
             onChange={(event) => {
               setSaleSearch(event.target.value)
@@ -158,18 +163,18 @@ export default function StorePage() {
         <Table<Sale>
           rows={salesPageItems}
           columns={[
-            { key: 'product', label: 'Proizvod', render: (row) => productById.get(row.productId)?.name ?? '?' },
-            { key: 'date', label: 'Datum', render: (row) => new Date(row.soldAt).toLocaleDateString('sr-RS') },
-            { key: 'quantity', label: 'Količina', render: (row) => String(row.quantity) },
-            { key: 'price', label: 'Cena', render: (row) => formatRsd(Number(row.price)) },
+            { key: 'product', label: t('product'), render: (row) => productById.get(row.productId)?.name ?? '?' },
+            { key: 'date', label: tc('date'), render: (row) => fmt.date(row.soldAt) },
+            { key: 'quantity', label: tc('quantity'), render: (row) => String(row.quantity) },
+            { key: 'price', label: tc('price'), render: (row) => fmt.rsd(Number(row.price)) },
           ]}
         />
         <Pagination page={salesPage} totalPages={salesTotalPages} onPageChange={setSalesPage} />
       </div>
 
-      <Modal open={productModalOpen} onClose={() => setProductModalOpen(false)} title="Novi proizvod">
+      <Modal open={productModalOpen} onClose={() => setProductModalOpen(false)} title={t('newProductTitle')}>
         <form onSubmit={handleCreateProduct}>
-          <Field label="Naziv" htmlFor="productName">
+          <Field label={tc('name')} htmlFor="productName">
             <input
               id="productName"
               value={productName}
@@ -178,7 +183,7 @@ export default function StorePage() {
               required
             />
           </Field>
-          <Field label="Cena (RSD)" htmlFor="productPrice">
+          <Field label={tc('priceRsd')} htmlFor="productPrice">
             <input
               id="productPrice"
               type="number"
@@ -189,14 +194,14 @@ export default function StorePage() {
             />
           </Field>
           <Button type="submit" className="w-full">
-            Sačuvaj
+            {tc('save')}
           </Button>
         </form>
       </Modal>
 
-      <Modal open={saleModalOpen} onClose={() => setSaleModalOpen(false)} title="Nova prodaja">
+      <Modal open={saleModalOpen} onClose={() => setSaleModalOpen(false)} title={t('newSaleTitle')}>
         <form onSubmit={handleCreateSale}>
-          <Field label="Proizvod" htmlFor="saleProductId">
+          <Field label={t('product')} htmlFor="saleProductId">
             <select
               id="saleProductId"
               value={saleProductId}
@@ -214,7 +219,7 @@ export default function StorePage() {
               ))}
             </select>
           </Field>
-          <Field label="Datum" htmlFor="saleDate">
+          <Field label={tc('date')} htmlFor="saleDate">
             <input
               id="saleDate"
               type="date"
@@ -224,7 +229,7 @@ export default function StorePage() {
               required
             />
           </Field>
-          <Field label="Cena (RSD)" htmlFor="salePrice">
+          <Field label={tc('priceRsd')} htmlFor="salePrice">
             <input
               id="salePrice"
               type="number"
@@ -234,7 +239,7 @@ export default function StorePage() {
               required
             />
           </Field>
-          <Field label="Količina" htmlFor="saleQuantity">
+          <Field label={tc('quantity')} htmlFor="saleQuantity">
             <input
               id="saleQuantity"
               type="number"
@@ -246,7 +251,7 @@ export default function StorePage() {
             />
           </Field>
           <Button type="submit" className="w-full">
-            Sačuvaj
+            {tc('save')}
           </Button>
         </form>
       </Modal>

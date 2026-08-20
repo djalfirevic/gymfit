@@ -9,7 +9,7 @@ const coordinate = (max: number) =>
     .refine((value) => {
       const parsed = Number(value)
       return Number.isFinite(parsed) && Math.abs(parsed) <= max
-    }, `Koordinata mora biti broj između -${max} i ${max}`)
+    }, max === 90 ? 'INVALID_LATITUDE' : 'INVALID_LONGITUDE')
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -26,7 +26,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
   const location = await updateLocation(Number(id), body.data)
   if (!location) {
-    return NextResponse.json({ error: 'Lokacija nije pronađena' }, { status: 404 })
+    return NextResponse.json({ error: 'LOCATION_NOT_FOUND' }, { status: 404 })
   }
   return NextResponse.json(location)
 }

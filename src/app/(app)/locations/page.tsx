@@ -2,22 +2,30 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
-import { errorMessage } from '@/lib/api-error'
+import { useApiError } from '@/lib/use-api-error'
 
 type Location = { id: number; name: string; address: string; latitude: string; longitude: string }
+
+// Its own component so the placeholder can read translations -- hooks cannot
+// run at the module scope where `dynamic()` is declared.
+function MapLoading() {
+  const t = useTranslations('locations')
+  return (
+    <div className="grid h-[420px] place-items-center rounded-card border border-line bg-surface-2 text-muted">
+      {t('mapLoading')}
+    </div>
+  )
+}
 
 // Leaflet touches `window` at module scope, so it can never render on the server.
 const LocationMap = dynamic(() => import('@/components/map/LocationMap').then((mod) => mod.LocationMap), {
   ssr: false,
-  loading: () => (
-    <div className="grid h-[420px] place-items-center rounded-card border border-line bg-surface-2 text-muted">
-      Učitavanje mape...
-    </div>
-  ),
+  loading: MapLoading,
 })
 
 async function fetchLocations(): Promise<Location[]> {
@@ -30,6 +38,9 @@ const INPUT_CLASS = 'w-full rounded-card border border-line bg-surface px-3 py-2
 
 export default function LocationsPage() {
   const queryClient = useQueryClient()
+  const t = useTranslations('locations')
+  const tc = useTranslations('common')
+  const apiError = useApiError()
   const { data: locations, isLoading } = useQuery({ queryKey: ['locations'], queryFn: fetchLocations })
 
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -74,7 +85,7 @@ export default function LocationsPage() {
         })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
-      alert(errorMessage(body, 'Greška pri čuvanju lokacije'))
+      alert(apiError(body, t('saveError')))
       return
     }
     setModalOpen(false)
@@ -82,32 +93,32 @@ export default function LocationsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Obrisati lokaciju?')) return
+    if (!confirm(t('confirmDelete'))) return
     const response = await fetch(`/api/locations/${id}`, { method: 'DELETE' })
     if (!response.ok) {
-      alert('Greška pri brisanju lokacije')
+      alert(t('deleteError'))
       return
     }
     if (selectedId === id) setSelectedId(null)
     queryClient.invalidateQueries({ queryKey: ['locations'] })
   }
 
-  if (isLoading) return <p className="text-muted">Učitavanje...</p>
+  if (isLoading) return <p className="text-muted">{tc('loading')}</p>
 
   const rows = locations ?? []
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-heading">Lokacije</h1>
-        <Button onClick={openCreate}>+ Nova lokacija</Button>
+        <h1 className="text-lg font-semibold text-heading">{t('title')}</h1>
+        <Button onClick={openCreate}>{t('new')}</Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <div className="flex flex-col gap-3">
           {rows.length === 0 && (
             <p className="rounded-card border border-line bg-surface p-4 text-muted">
-              Još nema unetih lokacija.
+              {t('empty')}
             </p>
           )}
           {rows.map((location) => (
@@ -130,10 +141,10 @@ export default function LocationsPage() {
               </button>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button variant="secondary" onClick={() => openEdit(location)}>
-                  Izmeni
+                  {tc('edit')}
                 </Button>
                 <Button variant="danger" onClick={() => handleDelete(location.id)}>
-                  Obriši
+                  {tc('delete')}
                 </Button>
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`}
@@ -141,7 +152,7 @@ export default function LocationsPage() {
                   rel="noreferrer"
                   className="rounded-card border border-line px-3.5 py-2 text-base font-medium text-fg transition-colors hover:border-primary hover:text-primary"
                 >
-                  Uputstvo
+                  {t('directions')}
                 </a>
               </div>
             </div>
@@ -154,10 +165,10 @@ export default function LocationsPage() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Izmena lokacije' : 'Nova lokacija'}
+        title={editing ? t('editTitle') : t('newTitle')}
       >
         <form onSubmit={handleSubmit}>
-          <Field label="Naziv" htmlFor="name">
+          <Field label={tc('name')} htmlFor="name">
             <input
               id="name"
               value={name}
@@ -166,7 +177,7 @@ export default function LocationsPage() {
               required
             />
           </Field>
-          <Field label="Adresa" htmlFor="address">
+          <Field label={t('address')} htmlFor="address">
             <input
               id="address"
               value={address}
@@ -176,7 +187,7 @@ export default function LocationsPage() {
             />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Geografska širina" htmlFor="latitude">
+            <Field label={t('latitude')} htmlFor="latitude">
               <input
                 id="latitude"
                 value={latitude}
@@ -186,7 +197,7 @@ export default function LocationsPage() {
                 required
               />
             </Field>
-            <Field label="Geografska dužina" htmlFor="longitude">
+            <Field label={t('longitude')} htmlFor="longitude">
               <input
                 id="longitude"
                 value={longitude}
@@ -198,7 +209,7 @@ export default function LocationsPage() {
             </Field>
           </div>
           <Button type="submit" className="w-full">
-            Sačuvaj
+            {tc('save')}
           </Button>
         </form>
       </Modal>

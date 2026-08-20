@@ -6,24 +6,24 @@ export async function POST(request: Request) {
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: 'Nevalidan zahtev' }, { status: 400 })
+    return NextResponse.json({ error: 'INVALID_REQUEST' }, { status: 400 })
   }
   const password =
     body && typeof body === 'object' && 'password' in body ? String((body as { password: unknown }).password) : ''
 
   const expected = process.env.APP_PASSWORD
   if (!expected) {
-    return NextResponse.json({ error: 'APP_PASSWORD nije podešen na serveru' }, { status: 500 })
+    return NextResponse.json({ error: 'PASSWORD_NOT_CONFIGURED' }, { status: 500 })
   }
   if (!timingSafeEqual(password, expected)) {
-    return NextResponse.json({ error: 'Pogrešna lozinka' }, { status: 401 })
+    return NextResponse.json({ error: 'WRONG_PASSWORD' }, { status: 401 })
   }
 
   let token: string
   try {
     token = await createSessionToken()
   } catch {
-    return NextResponse.json({ error: 'Greška pri prijavi na serveru' }, { status: 500 })
+    return NextResponse.json({ error: 'LOGIN_FAILED' }, { status: 500 })
   }
 
   const response = NextResponse.json({ ok: true })
