@@ -207,7 +207,10 @@
     "rate": "RSD → EUR rate",
     "reloadRate": "Fetch the live rate",
     "rateSaveError": "Could not save the rate",
-    "liveRateError": "The live rate is unavailable; keeping the rate you entered"
+    "liveRateError": "The live rate is unavailable; keeping the rate you entered",
+    "exportTitle": "Data export",
+    "exportHint": "Download the full Excel file with every sheet, like the original.",
+    "exportButton": "Download .xlsx"
   },
   "quickAdd": {
     "title": "New entry",

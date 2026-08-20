@@ -207,7 +207,10 @@
     "rate": "Kurs RSD → EUR",
     "reloadRate": "Učitaj kurs sa servera",
     "rateSaveError": "Greška pri čuvanju kursa",
-    "liveRateError": "Kurs sa servera nije dostupan, ostaje ručno unet kurs"
+    "liveRateError": "Kurs sa servera nije dostupan, ostaje ručno unet kurs",
+    "exportTitle": "Izvoz podataka",
+    "exportHint": "Preuzmi ceo Excel fajl sa svim listovima, kao original.",
+    "exportButton": "Preuzmi .xlsx"
   },
   "quickAdd": {
     "title": "Novi upis",

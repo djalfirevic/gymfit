@@ -92,6 +92,19 @@ export default function SettingsPage() {
         </Field>
         <Button type="submit">{saved ? tc('saved') : tc('save')}</Button>
       </form>
+
+      <section className="max-w-sm rounded-card border border-line bg-surface p-4">
+        <h2 className="text-md font-semibold text-heading">{t('exportTitle')}</h2>
+        <p className="mt-1 mb-3 text-sm text-muted">{t('exportHint')}</p>
+        {/* A plain link, not fetch+blob: the browser streams it straight to disk
+            and the Content-Disposition filename is honoured. */}
+        <a
+          href="/api/export"
+          className="inline-block rounded-card bg-primary px-3.5 py-2 text-base font-medium text-primary-fg transition-colors hover:bg-primary-hover"
+        >
+          {t('exportButton')}
+        </a>
+      </section>
     </div>
   )
 }
