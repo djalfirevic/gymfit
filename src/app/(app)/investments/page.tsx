@@ -127,12 +127,22 @@ export default function InvestmentsPage() {
 
       <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
         <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima po godinama</h2>
-        <YearOverYearChart data={yearOverYearData} />
+        <YearOverYearChart data={yearOverYearData} valueKey="zarada" />
       </div>
 
       <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
         <h2 className="mb-4 text-lg font-semibold text-white">Zarada po mesecima po godinama</h2>
         <YearOverYearStackedChart data={yearOverYearData} />
+      </div>
+
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+        <h2 className="mb-4 text-lg font-semibold text-white">Stanje po mesecima po godinama (posle troškova)</h2>
+        <YearOverYearChart data={yearOverYearData} valueKey="stanje" />
+      </div>
+
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+        <h2 className="mb-4 text-lg font-semibold text-white">Podela po mesecima po godinama (Stanje / 2)</h2>
+        <YearOverYearChart data={yearOverYearData} valueKey="podela" />
       </div>
 
       <Table<CapitalInvestment>

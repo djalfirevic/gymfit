@@ -6,12 +6,20 @@ import { formatNumber } from '@/lib/currency'
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec']
 const YEAR_COLORS: Record<number, string> = { 2024: '#60a5fa', 2025: '#f87171', 2026: '#facc15' }
 
-export function YearOverYearChart({ data }: { data: { year: number; rollup: { month: number; zarada: number }[] }[] }) {
+type RollupEntry = { month: number; zarada: number; stanje: number; podela: number }
+
+export function YearOverYearChart({
+  data,
+  valueKey = 'zarada',
+}: {
+  data: { year: number; rollup: RollupEntry[] }[]
+  valueKey?: 'zarada' | 'stanje' | 'podela'
+}) {
   const chartData = MONTH_LABELS.map((label, index) => {
     const month = index + 1
     const row: Record<string, number | string> = { month: label }
     for (const yearData of data) {
-      row[String(yearData.year)] = yearData.rollup.find((entry) => entry.month === month)?.zarada ?? 0
+      row[String(yearData.year)] = yearData.rollup.find((entry) => entry.month === month)?.[valueKey] ?? 0
     }
     return row
   })
