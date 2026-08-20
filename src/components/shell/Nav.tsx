@@ -13,6 +13,7 @@ const LINKS = [
   { href: '/store', label: 'Prodavnica' },
   { href: '/expenses', label: 'Troškovi' },
   { href: '/investments', label: 'Investicije' },
+  { href: '/locations', label: 'Lokacije' },
   { href: '/settings', label: 'Podešavanja' },
 ]
 

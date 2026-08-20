@@ -63,3 +63,15 @@ export const settings = pgTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
 })
+
+// numeric(10,7) holds the full coordinate range (-180.0000000) at ~1cm
+// resolution, and keeps the string round-tripping the other numeric columns
+// in this schema already use.
+export const locations = pgTable('locations', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  address: text('address').notNull(),
+  latitude: numeric('latitude', { precision: 10, scale: 7 }).notNull(),
+  longitude: numeric('longitude', { precision: 10, scale: 7 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
