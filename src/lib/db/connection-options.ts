@@ -14,13 +14,19 @@ import type { Options } from 'postgres'
  * 2. Neon suspends idle compute, so the first query after a quiet spell has to
  *    wait for it to wake. The connect timeout has to allow for that cold start
  *    rather than failing the request.
+ *
+ * Pool size then depends on where this runs. A long-running server wants a real
+ * pool; on Vercel every instance is short-lived and sits behind the Neon pooler
+ * already, so a large per-instance pool only opens connections that are thrown
+ * away moments later.
  */
 export function connectionOptions(connectionString: string): Options<Record<string, never>> {
   const isPooled = /-pooler\./.test(connectionString)
+  const isServerless = process.env.VERCEL === '1'
 
   return {
-    max: 10,
-    idle_timeout: 20,
+    max: isServerless ? 3 : 10,
+    idle_timeout: isServerless ? 10 : 20,
     connect_timeout: 30,
     ...(isPooled ? { prepare: false } : {}),
   }
