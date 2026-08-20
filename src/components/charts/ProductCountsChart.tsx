@@ -24,8 +24,11 @@ export function ProductCountsChart({ data }: { data: { productName: string; sold
       <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
         <XAxis dataKey="month" stroke="#a3a3a3" />
-        <YAxis stroke="#a3a3a3" tickFormatter={formatNumber} />
-        <Tooltip contentStyle={{ background: '#171717', border: '1px solid #404040' }} />
+        <YAxis stroke="#a3a3a3" width={72} tickFormatter={formatNumber} />
+        <Tooltip
+          contentStyle={{ background: '#171717', border: '1px solid #404040' }}
+          formatter={(value: number) => formatNumber(value)}
+        />
         <Legend />
         {productNames.map((name, index) => (
           <Bar key={name} dataKey={name} stackId="products" fill={COLORS[index % COLORS.length]} animationDuration={600} />
