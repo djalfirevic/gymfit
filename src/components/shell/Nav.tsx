@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import clsx from 'clsx'
+import { QuickAdd } from '@/components/shell/QuickAdd'
 
 const LINKS = [
   { href: '/dashboard', label: 'Pregled' },
@@ -28,6 +29,7 @@ export function Nav() {
   return (
     <nav className="flex h-full flex-col gap-1 p-4">
       <div className="mb-6 text-lg font-bold tracking-tight text-white">GYMFIT</div>
+      <QuickAdd />
       {LINKS.map((link) => (
         <Link
           key={link.href}
