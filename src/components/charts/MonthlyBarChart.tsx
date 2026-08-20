@@ -1,6 +1,7 @@
 'use client'
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { formatNumber } from '@/lib/currency'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec']
 
@@ -21,7 +22,7 @@ export function MonthlyBarChart({
       <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
         <XAxis dataKey="month" stroke="#a3a3a3" />
-        <YAxis stroke="#a3a3a3" />
+        <YAxis stroke="#a3a3a3" tickFormatter={formatNumber} />
         <Tooltip contentStyle={{ background: '#171717', border: '1px solid #404040' }} />
         <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} animationDuration={600} />
       </BarChart>

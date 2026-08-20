@@ -1,6 +1,7 @@
 'use client'
 
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { formatNumber } from '@/lib/currency'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec']
 const YEAR_COLORS: Record<number, string> = { 2024: '#60a5fa', 2025: '#f87171', 2026: '#facc15' }
@@ -24,7 +25,7 @@ export function YearOverYearStackedChart({
       <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
         <XAxis dataKey="month" stroke="#a3a3a3" />
-        <YAxis stroke="#a3a3a3" />
+        <YAxis stroke="#a3a3a3" tickFormatter={formatNumber} />
         <Tooltip contentStyle={{ background: '#171717', border: '1px solid #404040' }} />
         <Legend />
         {data.map((yearData) => (

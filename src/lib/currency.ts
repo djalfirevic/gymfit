@@ -21,3 +21,9 @@ export function formatEur(amount: number): string {
     maximumFractionDigits: 2,
   }).format(Math.round(amount * 100) / 100)
 }
+
+// Plain thousands-separated number, no currency symbol — for chart axis
+// ticks and other tight spaces where a full currency string is too wide.
+export function formatNumber(amount: number): string {
+  return new Intl.NumberFormat('sr-RS', { maximumFractionDigits: 0 }).format(amount)
+}

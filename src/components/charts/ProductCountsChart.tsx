@@ -1,6 +1,7 @@
 'use client'
 
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { formatNumber } from '@/lib/currency'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec']
 const COLORS = ['#60a5fa', '#f87171', '#facc15', '#4ade80', '#a78bfa', '#fb923c']
@@ -23,7 +24,7 @@ export function ProductCountsChart({ data }: { data: { productName: string; sold
       <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
         <XAxis dataKey="month" stroke="#a3a3a3" />
-        <YAxis stroke="#a3a3a3" />
+        <YAxis stroke="#a3a3a3" tickFormatter={formatNumber} />
         <Tooltip contentStyle={{ background: '#171717', border: '1px solid #404040' }} />
         <Legend />
         {productNames.map((name, index) => (
