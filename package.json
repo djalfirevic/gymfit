@@ -19,7 +19,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "probe:db": "tsx --tsconfig scripts/tsconfig.json scripts/probe-db.ts",
-    "seed:import": "tsx --tsconfig scripts/tsconfig.json scripts/seed-import.ts"
+    "seed:import": "tsx --tsconfig scripts/tsconfig.json scripts/seed-import.ts",
+    "sync:members": "tsx --tsconfig scripts/tsconfig.json scripts/sync-members.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
