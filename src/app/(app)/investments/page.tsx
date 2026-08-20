@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { StatCard } from '@/components/ui/StatCard'
-import { Table } from '@/components/ui/Table'
 import { errorMessage } from '@/lib/api-error'
 import { formatEur, formatRsd } from '@/lib/currency'
 
@@ -88,16 +87,6 @@ export default function InvestmentsPage() {
     queryClient.invalidateQueries({ queryKey: ['investments'] })
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm('Obrisati unos ulaganja?')) return
-    const response = await fetch(`/api/investments/${id}`, { method: 'DELETE' })
-    if (!response.ok) {
-      alert('Greška pri brisanju ulaganja')
-      return
-    }
-    queryClient.invalidateQueries({ queryKey: ['investments'] })
-  }
-
   if (isLoading) return <p className="text-neutral-400">Učitavanje...</p>
 
   return (
@@ -114,12 +103,12 @@ export default function InvestmentsPage() {
           hint={rate ? formatRsd((investments?.totalInvestedEur ?? 0) * rate) : undefined}
         />
         <StatCard
-          label={`Ukupna zarada (${years[0]}–${currentYear})`}
+          label="Ukupna zarada"
           value={dashboardLoaded ? formatEur(lifetimeTotals.ukupnaZaradaEur) : '—'}
           hint={dashboardLoaded && rate ? formatRsd(lifetimeTotals.ukupnaZaradaEur * rate) : undefined}
         />
         <StatCard
-          label={`Zarada (${years[0]}–${currentYear})`}
+          label="Moja zarada"
           value={dashboardLoaded ? formatEur(lifetimeTotals.zaradaEur) : '—'}
           hint={dashboardLoaded && rate ? formatRsd(lifetimeTotals.zaradaEur * rate) : undefined}
         />
@@ -144,24 +133,6 @@ export default function InvestmentsPage() {
         <h2 className="mb-4 text-lg font-semibold text-white">Podela po mesecima po godinama (Stanje / 2)</h2>
         <YearOverYearChart data={yearOverYearData} valueKey="podela" />
       </div>
-
-      <Table<CapitalInvestment>
-        rows={investments?.entries ?? []}
-        columns={[
-          { key: 'date', label: 'Datum', render: (row) => new Date(row.investedAt).toLocaleDateString('sr-RS') },
-          { key: 'amount', label: 'Iznos (EUR)', render: (row) => formatEur(Number(row.amountEur)) },
-          { key: 'note', label: 'Napomena', render: (row) => row.note ?? '' },
-          {
-            key: 'actions',
-            label: '',
-            render: (row) => (
-              <Button variant="danger" onClick={() => handleDelete(row.id)}>
-                Obriši
-              </Button>
-            ),
-          },
-        ]}
-      />
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Novo ulaganje">
         <form onSubmit={handleSubmit}>
