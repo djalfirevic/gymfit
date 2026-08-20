@@ -12,14 +12,14 @@ import { Pagination } from '@/components/ui/Pagination'
 import { Table } from '@/components/ui/Table'
 import { useApiError } from '@/lib/use-api-error'
 import { useFormat } from '@/lib/use-format'
-import { EXPENSE_CATEGORIES, type ExpenseCategory } from '@/lib/expenses/categorize'
+import { useExpenseCategories } from '@/lib/use-expense-categories'
 import { usePagination } from '@/lib/use-pagination'
 
-type Expense = { id: number; expenseDate: string; description: string; amount: string; category: ExpenseCategory }
-type ExpenseRow = { localId: number; expenseDate: string; description: string; amount: string; category: ExpenseCategory }
+type Expense = { id: number; expenseDate: string; description: string; amount: string; categoryId: number }
+type ExpenseRow = { localId: number; expenseDate: string; description: string; amount: string; categoryId: number | '' }
 
 function emptyRow(localId: number): ExpenseRow {
-  return { localId, expenseDate: '', description: '', amount: '', category: 'ostalo' }
+  return { localId, expenseDate: '', description: '', amount: '', categoryId: '' }
 }
 
 async function fetchExpenses(): Promise<Expense[]> {
@@ -28,7 +28,9 @@ async function fetchExpenses(): Promise<Expense[]> {
   return response.json()
 }
 
-async function fetchDashboardExpenses(year: number): Promise<{ category: ExpenseCategory; month: number; total: number }[]> {
+async function fetchDashboardExpenses(
+  year: number,
+): Promise<{ categoryId: number; slug: string | null; name: string; month: number; total: number }[]> {
   const response = await fetch(`/api/dashboard?year=${year}`)
   if (!response.ok) throw new Error('Failed to load dashboard')
   const body = await response.json()
@@ -39,9 +41,9 @@ export default function ExpensesPage() {
   const queryClient = useQueryClient()
   const t = useTranslations('expenses')
   const tc = useTranslations('common')
-  const tcat = useTranslations('categories')
   const apiError = useApiError()
   const fmt = useFormat()
+  const { categories, labelById } = useExpenseCategories()
   const { data: expenses, isLoading } = useQuery({ queryKey: ['expenses'], queryFn: fetchExpenses })
   const currentYear = new Date().getFullYear()
   const { data: categoryData } = useQuery({
@@ -56,7 +58,7 @@ export default function ExpensesPage() {
   const [expenseDate, setExpenseDate] = useState('')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState<ExpenseCategory>('ostalo')
+  const [categoryId, setCategoryId] = useState<number | ''>('')
   const [search, setSearch] = useState('')
   const [rows, setRows] = useState<ExpenseRow[]>([emptyRow(1)])
   const [nextRowId, setNextRowId] = useState(2)
@@ -80,7 +82,7 @@ export default function ExpensesPage() {
     setExpenseDate(expense.expenseDate.slice(0, 10))
     setDescription(expense.description)
     setAmount(expense.amount)
-    setCategory(expense.category)
+    setCategoryId(expense.categoryId)
     setModalOpen(true)
   }
 
@@ -103,7 +105,7 @@ export default function ExpensesPage() {
     const response = await fetch(`/api/expenses/${editing.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ expenseDate, description, amount, category }),
+      body: JSON.stringify({ expenseDate, description, amount, categoryId }),
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
@@ -128,7 +130,7 @@ export default function ExpensesPage() {
           expenseDate: row.expenseDate,
           description: row.description,
           amount: row.amount,
-          category: row.category,
+          categoryId: row.categoryId,
         }),
       })
       if (response.ok) {
@@ -202,7 +204,7 @@ export default function ExpensesPage() {
         columns={[
           { key: 'date', label: tc('date'), render: (row) => fmt.date(row.expenseDate) },
           { key: 'description', label: tc('name'), render: (row) => row.description },
-          { key: 'category', label: tc('category'), render: (row) => tcat(row.category) },
+          { key: 'category', label: tc('category'), render: (row) => labelById(row.categoryId) },
           { key: 'amount', label: tc('amount'), render: (row) => fmt.rsd(Number(row.amount)) },
           {
             key: 'actions',
@@ -258,14 +260,17 @@ export default function ExpensesPage() {
             <Field label={tc('category')} htmlFor="category">
               <select
                 id="category"
-                value={category}
-                onChange={(event) => setCategory(event.target.value as ExpenseCategory)}
+                value={categoryId}
+                onChange={(event) => setCategoryId(Number(event.target.value))}
                 className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 required
               >
-                {EXPENSE_CATEGORIES.map((value) => (
-                  <option key={value} value={value}>
-                    {tcat(value)}
+                <option value="" disabled>
+                  {tc('category')}
+                </option>
+                {categories.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {labelById(option.id)}
                   </option>
                 ))}
               </select>
@@ -312,16 +317,19 @@ export default function ExpensesPage() {
                 />
                 <select
                   aria-label={tc('category')}
-                  value={row.category}
-                  onChange={(event) => updateRow(row.localId, { category: event.target.value as ExpenseCategory })}
+                  value={row.categoryId}
+                  onChange={(event) => updateRow(row.localId, { categoryId: Number(event.target.value) })}
                   className="rounded-card border border-line bg-surface px-3 py-2 text-fg"
                   required
                 >
-                  {EXPENSE_CATEGORIES.map((value) => (
-                    <option key={value} value={value}>
-                      {tcat(value)}
-                    </option>
-                  ))}
+                  <option value="" disabled>
+                  {tc('category')}
+                </option>
+                {categories.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {labelById(option.id)}
+                  </option>
+                ))}
                 </select>
                 {index === rows.length - 1 ? (
                   <Button type="button" onClick={addRow} aria-label={t('addRow')}>

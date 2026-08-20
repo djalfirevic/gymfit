@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { EXPENSE_CATEGORIES } from '@/lib/expenses/categorize'
 import { deleteExpense, updateExpense } from '@/lib/db/queries/expenses'
 
 const updateSchema = z.object({
   expenseDate: z.coerce.date().optional(),
   description: z.string().min(1).optional(),
   amount: z.string().min(1).optional(),
-  category: z.enum(EXPENSE_CATEGORIES).optional(),
+  categoryId: z.number().int().positive().optional(),
 })
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

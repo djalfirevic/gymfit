@@ -6,14 +6,13 @@ import { ExpensesByCategoryChart } from '@/components/charts/ExpensesByCategoryC
 import { YearOverYearChart } from '@/components/charts/YearOverYearChart'
 import { StatCard } from '@/components/ui/StatCard'
 import { useFormat } from '@/lib/use-format'
-import type { ExpenseCategory } from '@/lib/expenses/categorize'
 
 type DashboardResponse = {
   year: number
   memberCounts: { active: number; notRenewed: number; total: number }
   rollup: { month: number; zarada: number; troskovi: number; stanje: number; podela: number }[]
   yearlyTotals: { ukupnaZaradaEur: number; zaradaEur: number }
-  expensesByCategory: { category: ExpenseCategory; month: number; total: number }[]
+  expensesByCategory: { categoryId: number; slug: string | null; name: string; month: number; total: number }[]
 }
 
 async function fetchDashboard(year: number): Promise<DashboardResponse> {

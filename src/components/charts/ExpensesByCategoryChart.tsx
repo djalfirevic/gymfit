@@ -3,25 +3,27 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useChartTheme } from '@/lib/chart-theme'
 import { useFormat } from '@/lib/use-format'
-import { useTranslations } from 'next-intl'
-import { type ExpenseCategory } from '@/lib/expenses/categorize'
+import { useExpenseCategories } from '@/lib/use-expense-categories'
 
 export function ExpensesByCategoryChart({
   data,
 }: {
-  data: { category: ExpenseCategory; month: number; total: number }[]
+  data: { categoryId: number; slug: string | null; name: string; month: number; total: number }[]
 }) {
   const theme = useChartTheme()
   const fmt = useFormat()
-  const tc = useTranslations('categories')
-  const totalsByCategory = new Map<ExpenseCategory, number>()
+  const { label } = useExpenseCategories()
+  // Grouped by id so two categories that happen to share a display name stay
+  // separate bars.
+  const totals = new Map<number, { label: string; total: number }>()
   for (const row of data) {
-    totalsByCategory.set(row.category, (totalsByCategory.get(row.category) ?? 0) + row.total)
+    const existing = totals.get(row.categoryId)
+    totals.set(row.categoryId, {
+      label: existing?.label ?? label(row),
+      total: (existing?.total ?? 0) + row.total,
+    })
   }
-  const chartData = Array.from(totalsByCategory.entries()).map(([category, total]) => ({
-    category: tc(category),
-    total,
-  }))
+  const chartData = Array.from(totals.values()).map((entry) => ({ category: entry.label, total: entry.total }))
 
   return (
     <ResponsiveContainer width="100%" height={280}>

@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import { parse } from 'csv-parse/sync'
 import { eq } from 'drizzle-orm'
 import { db } from './db-client'
+import { loadCategoryIdsBySlug, requireCategoryId } from './category-map'
 import { expenses, members, payments, storeProducts, storeSales } from '../src/lib/db/schema'
 import { categorizeExpense } from '../src/lib/expenses/categorize'
 import { matchMemberIdByName } from '../src/lib/import/match-member'
@@ -117,6 +118,7 @@ async function importExpenses(dir: string): Promise<void> {
   }
   const rows = readCsv(resolve(dir, 'Expenses.csv'))
   const categoryCounts: Record<string, number> = {}
+  const categoryIds = await loadCategoryIdsBySlug()
   await db.transaction(async (tx) => {
     for (const row of rows) {
       const dateRaw = row['Datum']
@@ -125,7 +127,12 @@ async function importExpenses(dir: string): Promise<void> {
       if (!dateRaw || !description || !amountRaw) continue
       const category = categorizeExpense(description)
       categoryCounts[category] = (categoryCounts[category] ?? 0) + 1
-      await tx.insert(expenses).values({ expenseDate: parseSerbianDate(dateRaw), description, amount: amountRaw, category })
+      await tx.insert(expenses).values({
+        expenseDate: parseSerbianDate(dateRaw),
+        description,
+        amount: amountRaw,
+        categoryId: requireCategoryId(categoryIds, category),
+      })
     }
   })
   console.log(`Expenses: inserted ${rows.length} rows.`)

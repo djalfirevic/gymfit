@@ -213,7 +213,13 @@
     "liveRateError": "Kurs sa servera nije dostupan, ostaje ručno unet kurs",
     "exportTitle": "Izvoz podataka",
     "exportHint": "Preuzmi ceo Excel fajl sa svim listovima, kao original.",
-    "exportButton": "Preuzmi .xlsx"
+    "exportButton": "Preuzmi .xlsx",
+    "categoriesTitle": "Kategorije troškova",
+    "categoriesHint": "Dodaj svoje kategorije. Nove se prikazuju isto na oba jezika.",
+    "categoryPlaceholder": "Naziv nove kategorije",
+    "categorySaveError": "Greška pri čuvanju kategorije",
+    "categoryDeleteError": "Greška pri brisanju kategorije",
+    "categoryConfirmDelete": "Obrisati kategoriju {name}?"
   },
   "quickAdd": {
     "title": "Novi upis",
@@ -251,6 +257,10 @@
     "INVALID_LATITUDE": "Geografska širina mora biti broj između -90 i 90",
     "INVALID_LONGITUDE": "Geografska dužina mora biti broj između -180 i 180",
     "VALIDATION_FAILED": "Uneti podaci nisu ispravni",
-    "INVALID_REQUEST": "Nevalidan zahtev"
+    "INVALID_REQUEST": "Nevalidan zahtev",
+    "CATEGORY_NOT_FOUND": "Kategorija nije pronađena",
+    "CATEGORY_HAS_EXPENSES": "Kategorija se koristi za postojeće troškove i ne može biti obrisana",
+    "CATEGORY_IS_FALLBACK": "Ostalo je podrazumevana kategorija i ne može biti obrisana",
+    "CATEGORY_DUPLICATE": "Kategorija sa tim nazivom već postoji"
   }
 }

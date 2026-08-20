@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parse } from 'csv-parse/sync'
 import { db } from './db-client'
+import { loadCategoryIdsBySlug, requireCategoryId } from './category-map'
 import { expenses } from '../src/lib/db/schema'
 import { categorizeExpense } from '../src/lib/expenses/categorize'
 
@@ -83,6 +84,7 @@ async function main(): Promise<void> {
   console.log(`Found ${toInsert.length} new expense(s) out of ${csvRows.length} valid CSV rows.`)
 
   const categoryCounts: Record<string, number> = {}
+  const categoryIds = await loadCategoryIdsBySlug()
   await db.transaction(async (tx) => {
     for (const row of toInsert) {
       const category = categorizeExpense(row.description)
@@ -91,7 +93,7 @@ async function main(): Promise<void> {
         expenseDate: row.expenseDate,
         description: row.description,
         amount: row.amount,
-        category,
+        categoryId: requireCategoryId(categoryIds, category),
       })
     }
   })

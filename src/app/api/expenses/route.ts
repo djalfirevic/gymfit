@@ -1,19 +1,18 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { EXPENSE_CATEGORIES } from '@/lib/expenses/categorize'
 import { createExpense, listExpenses } from '@/lib/db/queries/expenses'
 
 const createSchema = z.object({
   expenseDate: z.coerce.date(),
   description: z.string().min(1),
   amount: z.string().min(1),
-  category: z.enum(EXPENSE_CATEGORIES),
+  categoryId: z.number().int().positive(),
 })
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const category = url.searchParams.get('category')
-  const rows = await listExpenses(category ? { category: category as (typeof EXPENSE_CATEGORIES)[number] } : undefined)
+  const categoryId = url.searchParams.get('categoryId')
+  const rows = await listExpenses(categoryId ? { categoryId: Number(categoryId) } : undefined)
   return NextResponse.json(rows)
 }
 

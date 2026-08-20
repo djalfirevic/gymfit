@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { useApiError } from '@/lib/use-api-error'
-import { EXPENSE_CATEGORIES, type ExpenseCategory } from '@/lib/expenses/categorize'
+import { useExpenseCategories } from '@/lib/use-expense-categories'
 import { normalizeName } from '@/lib/import/match-member'
 
 type Member = { id: number; fullName: string }
@@ -17,7 +17,7 @@ type EntryType = 'sale' | 'expense' | 'memberPayment'
 
 type QueuedEntry =
   | { localId: number; type: 'sale'; productId: number; productName: string; soldAt: string; price: string; quantity: number }
-  | { localId: number; type: 'expense'; expenseDate: string; description: string; amount: string; category: ExpenseCategory }
+  | { localId: number; type: 'expense'; expenseDate: string; description: string; amount: string; categoryId: number }
   | {
       localId: number
       type: 'memberPayment'
@@ -64,9 +64,9 @@ export function QuickAdd() {
   const queryClient = useQueryClient()
   const t = useTranslations('quickAdd')
   const tc = useTranslations('common')
-  const tcat = useTranslations('categories')
   const tnav = useTranslations('nav')
   const tstore = useTranslations('store')
+  const { categories, labelById } = useExpenseCategories()
   const apiError = useApiError()
   const [open, setOpen] = useState(false)
   const [activeType, setActiveType] = useState<EntryType>('memberPayment')
@@ -87,7 +87,7 @@ export function QuickAdd() {
   const [expenseDate, setExpenseDate] = useState(todayIso())
   const [expenseDescription, setExpenseDescription] = useState('')
   const [expenseAmount, setExpenseAmount] = useState('')
-  const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory>('ostalo')
+  const [expenseCategoryId, setExpenseCategoryId] = useState<number | ''>('')
 
   // Member + payment fields
   const [memberNameRaw, setMemberNameRaw] = useState('')
@@ -110,7 +110,7 @@ export function QuickAdd() {
     setExpenseDate(todayIso())
     setExpenseDescription('')
     setExpenseAmount('')
-    setExpenseCategory('ostalo')
+    setExpenseCategoryId('')
     setMemberNameRaw('')
     setResolvedMemberId(null)
     setPaymentAmount('')
@@ -165,15 +165,15 @@ export function QuickAdd() {
   }
 
   function addExpenseToQueue() {
-    if (!expenseDate || !expenseDescription || !expenseAmount) return
+    if (!expenseDate || !expenseDescription || !expenseAmount || expenseCategoryId === '') return
     setQueue((current) => [
       ...current,
-      { localId: nextLocalId, type: 'expense', expenseDate, description: expenseDescription, amount: expenseAmount, category: expenseCategory },
+      { localId: nextLocalId, type: 'expense', expenseDate, description: expenseDescription, amount: expenseAmount, categoryId: expenseCategoryId },
     ])
     setNextLocalId((id) => id + 1)
     setExpenseDescription('')
     setExpenseAmount('')
-    setExpenseCategory('ostalo')
+    setExpenseCategoryId('')
   }
 
   function addMemberPaymentToQueue() {
@@ -216,7 +216,7 @@ export function QuickAdd() {
               expenseDate: entry.expenseDate,
               description: entry.description,
               amount: entry.amount,
-              category: entry.category,
+              categoryId: entry.categoryId,
             }),
           })
           if (!response.ok) throw new Error()
@@ -421,13 +421,16 @@ export function QuickAdd() {
               <Field label={tc('category')} htmlFor="qa-expense-category">
                 <select
                   id="qa-expense-category"
-                  value={expenseCategory}
-                  onChange={(event) => setExpenseCategory(event.target.value as ExpenseCategory)}
+                  value={expenseCategoryId}
+                  onChange={(event) => setExpenseCategoryId(Number(event.target.value))}
                   className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
                 >
-                  {EXPENSE_CATEGORIES.map((value) => (
-                    <option key={value} value={value}>
-                      {tcat(value)}
+                  <option value="" disabled>
+                    {tc('category')}
+                  </option>
+                  {categories.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {labelById(option.id)}
                     </option>
                   ))}
                 </select>

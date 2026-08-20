@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { ExpenseCategoriesCard } from '@/components/settings/ExpenseCategoriesCard'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { useApiError } from '@/lib/use-api-error'
@@ -92,6 +93,8 @@ export default function SettingsPage() {
         </Field>
         <Button type="submit">{saved ? tc('saved') : tc('save')}</Button>
       </form>
+
+      <ExpenseCategoriesCard />
 
       <section className="max-w-sm rounded-card border border-line bg-surface p-4">
         <h2 className="text-md font-semibold text-heading">{t('exportTitle')}</h2>

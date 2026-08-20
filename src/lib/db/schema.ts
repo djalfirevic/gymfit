@@ -1,12 +1,4 @@
-import { boolean, date, integer, numeric, pgEnum, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
-
-export const expenseCategory = pgEnum('expense_category', [
-  'zarade_bonusi',
-  'rezije',
-  'zalihe',
-  'odrzavanje',
-  'ostalo',
-])
+import { boolean, date, integer, numeric, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const members = pgTable('members', {
   id: serial('id').primaryKey(),
@@ -42,12 +34,26 @@ export const storeSales = pgTable('store_sales', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+// Categories were a pgEnum, which meant adding one needed a migration and a
+// deploy. They are a table now so they can be managed from the app. `slug` is
+// kept for the five originals: it is what categorizeExpense matches on during
+// CSV import, and what the message catalog keys off so they still translate.
+// Categories added later have no slug and display the name as typed.
+export const expenseCategories = pgTable('expense_categories', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').unique(),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const expenses = pgTable('expenses', {
   id: serial('id').primaryKey(),
   expenseDate: date('expense_date', { mode: 'date' }).notNull(),
   description: text('description').notNull(),
   amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
-  category: expenseCategory('category').notNull(),
+  categoryId: integer('category_id')
+    .notNull()
+    .references(() => expenseCategories.id),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

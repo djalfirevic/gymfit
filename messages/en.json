@@ -213,7 +213,13 @@
     "liveRateError": "The live rate is unavailable; keeping the rate you entered",
     "exportTitle": "Data export",
     "exportHint": "Download the full Excel file with every sheet, like the original.",
-    "exportButton": "Download .xlsx"
+    "exportButton": "Download .xlsx",
+    "categoriesTitle": "Expense categories",
+    "categoriesHint": "Add your own categories. New ones read the same in both languages.",
+    "categoryPlaceholder": "New category name",
+    "categorySaveError": "Could not save the category",
+    "categoryDeleteError": "Could not delete the category",
+    "categoryConfirmDelete": "Delete category {name}?"
   },
   "quickAdd": {
     "title": "New entry",
@@ -251,6 +257,10 @@
     "INVALID_LATITUDE": "Latitude must be a number between -90 and 90",
     "INVALID_LONGITUDE": "Longitude must be a number between -180 and 180",
     "VALIDATION_FAILED": "The submitted data is not valid",
-    "INVALID_REQUEST": "Invalid request"
+    "INVALID_REQUEST": "Invalid request",
+    "CATEGORY_NOT_FOUND": "Category not found",
+    "CATEGORY_HAS_EXPENSES": "This category is used by existing expenses and cannot be deleted",
+    "CATEGORY_IS_FALLBACK": "Ostalo is the default category and cannot be deleted",
+    "CATEGORY_DUPLICATE": "A category with that name already exists"
   }
 }
