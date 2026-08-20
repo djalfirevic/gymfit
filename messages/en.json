@@ -35,7 +35,8 @@
     "investments": "Investments",
     "locations": "Locations",
     "settings": "Settings",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "close": "Close"
   },
   "pagination": {
     "previous": "← Previous",

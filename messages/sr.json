@@ -35,7 +35,8 @@
     "investments": "Investicije",
     "locations": "Lokacije",
     "settings": "Podešavanja",
-    "logout": "Odjavi se"
+    "logout": "Odjavi se",
+    "close": "Zatvori"
   },
   "pagination": {
     "previous": "← Prethodna",

@@ -18,12 +18,13 @@ const LINKS = [
   { href: '/settings', key: 'settings' },
 ] as const
 
-export function Nav() {
+export function Nav({ onNavigate }: { onNavigate?: () => void } = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const t = useTranslations('nav')
 
   async function handleLogout() {
+    onNavigate?.()
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
     router.refresh()
@@ -39,7 +40,7 @@ export function Nav() {
       </div>
 
       <div className="px-4 pt-4">
-        <QuickAdd />
+        <QuickAdd onOpen={onNavigate} />
       </div>
 
       <div className="px-5 pt-4 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">{t('menu')}</div>
@@ -49,6 +50,7 @@ export function Nav() {
           <Link
             key={link.href}
             href={link.href}
+            onClick={onNavigate}
             className={clsx(
               'rounded-card px-2.5 py-2 text-base font-medium transition-colors',
               pathname.startsWith(link.href)
