@@ -23,7 +23,9 @@
     "no": "Ne",
     "showing": "Prikazano {shown} od {total}",
     "confirmTitle": "Potvrda",
-    "deleting": "Brisanje..."
+    "deleting": "Brisanje...",
+    "addRow": "Dodaj red",
+    "removeRow": "Ukloni red"
   },
   "nav": {
     "menu": "Meni",
@@ -165,7 +167,10 @@
     "chooseProduct": "Izaberi proizvod",
     "addRow": "Dodaj red",
     "removeRow": "Ukloni red",
-    "salePartialSaveError": "{failed} od {total} prodaja nije sačuvano. Ostale su u formi — pokušajte ponovo."
+    "salePartialSaveError": "{failed} od {total} prodaja nije sačuvano. Ostale su u formi — pokušajte ponovo.",
+    "currentPrice": "Trenutna cena",
+    "editProductTitle": "Izmena proizvoda",
+    "priceIsCurrentOnly": "Ova cena važi samo za nove prodaje. Već upisane prodaje zadržavaju cenu po kojoj su prodate."
   },
   "expenses": {
     "title": "Troškovi",
@@ -242,7 +247,12 @@
     "summaryExpense": "Trošak: {description} ({amount} RSD) — {date}",
     "summaryPayment": "Uplata: {member} ({amount} RSD, važi do {until})",
     "memberSaveError": "Greška pri dodavanju člana",
-    "partialSaveError": "{failed} od {total} stavki nije sačuvano. Ostale su u listi — pokušajte ponovo."
+    "partialSaveError": "{failed} od {total} stavki nije sačuvano. Ostale su u listi — pokušajte ponovo.",
+    "sectionPayments": "Uplate",
+    "sectionSales": "Prodaja",
+    "sectionExpenses": "Troškovi",
+    "dateAppliesToAll": "važi za sve unose ispod",
+    "saveAllCount": "Sačuvaj sve ({count})"
   },
   "errors": {
     "MEMBER_NOT_FOUND": "Član nije pronađen",

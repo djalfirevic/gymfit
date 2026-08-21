@@ -23,7 +23,9 @@
     "no": "No",
     "showing": "Showing {shown} of {total}",
     "confirmTitle": "Confirm",
-    "deleting": "Deleting..."
+    "deleting": "Deleting...",
+    "addRow": "Add row",
+    "removeRow": "Remove row"
   },
   "nav": {
     "menu": "Menu",
@@ -165,7 +167,10 @@
     "chooseProduct": "Choose a product",
     "addRow": "Add row",
     "removeRow": "Remove row",
-    "salePartialSaveError": "{failed} of {total} sales were not saved. They are still in the form — try again."
+    "salePartialSaveError": "{failed} of {total} sales were not saved. They are still in the form — try again.",
+    "currentPrice": "Current price",
+    "editProductTitle": "Edit product",
+    "priceIsCurrentOnly": "This price applies to new sales only. Sales already recorded keep the price they were sold at."
   },
   "expenses": {
     "title": "Expenses",
@@ -242,7 +247,12 @@
     "summaryExpense": "Expense: {description} ({amount} RSD) — {date}",
     "summaryPayment": "Payment: {member} ({amount} RSD, valid until {until})",
     "memberSaveError": "Could not add the member",
-    "partialSaveError": "{failed} of {total} entries were not saved. They are still in the list — try again."
+    "partialSaveError": "{failed} of {total} entries were not saved. They are still in the list — try again.",
+    "sectionPayments": "Payments",
+    "sectionSales": "Sales",
+    "sectionExpenses": "Expenses",
+    "dateAppliesToAll": "applies to every entry below",
+    "saveAllCount": "Save all ({count})"
   },
   "errors": {
     "MEMBER_NOT_FOUND": "Member not found",

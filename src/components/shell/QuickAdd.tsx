@@ -4,48 +4,20 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { normalizeName } from '@/lib/import/match-member'
 import { useApiError } from '@/lib/use-api-error'
 import { useExpenseCategories } from '@/lib/use-expense-categories'
-import { normalizeName } from '@/lib/import/match-member'
 
 type Member = { id: number; fullName: string }
 type Product = { id: number; name: string; defaultPrice: string }
 
-type EntryType = 'sale' | 'expense' | 'memberPayment'
-
-type QueuedEntry =
-  | { localId: number; type: 'sale'; productId: number; productName: string; soldAt: string; price: string; quantity: number }
-  | { localId: number; type: 'expense'; expenseDate: string; description: string; amount: string; categoryId: number }
-  | {
-      localId: number
-      type: 'memberPayment'
-      memberId: number
-      memberNameRaw: string
-      amount: string
-      renewalUntil: string
-    }
+type PaymentRow = { localId: number; memberName: string; createdMemberId: number | null; amount: string; until: string }
+type SaleRow = { localId: number; productId: number | ''; price: string; quantity: string }
+type ExpenseRow = { localId: number; description: string; amount: string; categoryId: number | '' }
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
-}
-
-type Translate = (key: string, values?: Record<string, string | number>) => string
-
-function summarize(entry: QueuedEntry, t: Translate): string {
-  if (entry.type === 'sale') {
-    return t('summarySale', {
-      product: entry.productName,
-      quantity: entry.quantity,
-      price: entry.price,
-      date: entry.soldAt,
-    })
-  }
-  if (entry.type === 'expense') {
-    return t('summaryExpense', { description: entry.description, amount: entry.amount, date: entry.expenseDate })
-  }
-  return t('summaryPayment', { member: entry.memberNameRaw, amount: entry.amount, until: entry.renewalUntil })
 }
 
 async function fetchMembers(): Promise<Member[]> {
@@ -60,201 +32,180 @@ async function fetchProducts(): Promise<Product[]> {
   return response.json()
 }
 
+const INPUT = 'rounded-card border border-line bg-surface px-3 py-2 text-fg'
+
+const emptyPayment = (localId: number): PaymentRow => ({
+  localId,
+  memberName: '',
+  createdMemberId: null,
+  amount: '',
+  until: '',
+})
+const emptySale = (localId: number): SaleRow => ({ localId, productId: '', price: '', quantity: '1' })
+const emptyExpense = (localId: number): ExpenseRow => ({ localId, description: '', amount: '', categoryId: '' })
+
+// Declared at module scope: a component created inside another component gets a
+// fresh identity on every render, which remounts its subtree and loses focus
+// mid-typing.
+function Heading({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="flex items-baseline gap-2 border-b border-line pb-1.5">
+      <h3 className="text-md font-semibold text-heading">{label}</h3>
+      {count > 0 && <span className="tabular text-sm text-muted">{count}</span>}
+    </div>
+  )
+}
+
+function RowButton({ isLast, onAdd, onRemove }: { isLast: boolean; onAdd: () => void; onRemove: () => void }) {
+  const tc = useTranslations('common')
+  return isLast ? (
+    <Button type="button" aria-label={tc('addRow')} onClick={onAdd}>
+      +
+    </Button>
+  ) : (
+    <Button type="button" variant="secondary" aria-label={tc('removeRow')} onClick={onRemove}>
+      ✕
+    </Button>
+  )
+}
+
 export function QuickAdd() {
   const queryClient = useQueryClient()
   const t = useTranslations('quickAdd')
   const tc = useTranslations('common')
   const tnav = useTranslations('nav')
   const tstore = useTranslations('store')
-  const { categories, labelById } = useExpenseCategories()
   const apiError = useApiError()
+  const { categories, labelById } = useExpenseCategories()
+
   const [open, setOpen] = useState(false)
-  const [activeType, setActiveType] = useState<EntryType>('memberPayment')
-  const [queue, setQueue] = useState<QueuedEntry[]>([])
-  const [nextLocalId, setNextLocalId] = useState(1)
+  const [date, setDate] = useState(todayIso())
   const [saving, setSaving] = useState(false)
+  const [nextId, setNextId] = useState(4)
+  const [creatingMemberFor, setCreatingMemberFor] = useState<number | null>(null)
 
-  const { data: members } = useQuery({ queryKey: ['members'], queryFn: fetchMembers })
-  const { data: products } = useQuery({ queryKey: ['store-products'], queryFn: fetchProducts })
+  const [payments, setPayments] = useState<PaymentRow[]>([emptyPayment(1)])
+  const [sales, setSales] = useState<SaleRow[]>([emptySale(2)])
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([emptyExpense(3)])
 
-  // Sale fields
-  const [saleProductId, setSaleProductId] = useState('')
-  const [saleDate, setSaleDate] = useState(todayIso())
-  const [salePrice, setSalePrice] = useState('')
-  const [saleQuantity, setSaleQuantity] = useState('1')
+  const { data: memberData } = useQuery({ queryKey: ['members'], queryFn: fetchMembers })
+  const { data: productData } = useQuery({ queryKey: ['store-products'], queryFn: fetchProducts })
+  const members = memberData ?? []
+  const products = productData ?? []
 
-  // Expense fields
-  const [expenseDate, setExpenseDate] = useState(todayIso())
-  const [expenseDescription, setExpenseDescription] = useState('')
-  const [expenseAmount, setExpenseAmount] = useState('')
-  const [expenseCategoryId, setExpenseCategoryId] = useState<number | ''>('')
-
-  // Member + payment fields
-  const [memberNameRaw, setMemberNameRaw] = useState('')
-  const [resolvedMemberId, setResolvedMemberId] = useState<number | null>(null)
-  const [paymentAmount, setPaymentAmount] = useState('')
-  const [renewalUntil, setRenewalUntil] = useState('')
-  const [creatingMember, setCreatingMember] = useState(false)
-  const [locallyAddedMembers, setLocallyAddedMembers] = useState<Member[]>([])
-
-  const knownMembers = [...(members ?? []), ...locallyAddedMembers]
-  const matchedMember = knownMembers.find((member) => normalizeName(member.fullName) === normalizeName(memberNameRaw))
-  const memberId = resolvedMemberId ?? matchedMember?.id ?? null
-  const showNewMemberPrompt = memberNameRaw.trim().length > 0 && !matchedMember && resolvedMemberId === null
-
-  function resetTypeFields() {
-    setSaleProductId('')
-    setSaleDate(todayIso())
-    setSalePrice('')
-    setSaleQuantity('1')
-    setExpenseDate(todayIso())
-    setExpenseDescription('')
-    setExpenseAmount('')
-    setExpenseCategoryId('')
-    setMemberNameRaw('')
-    setResolvedMemberId(null)
-    setPaymentAmount('')
-    setRenewalUntil('')
+  function takeId(): number {
+    const id = nextId
+    setNextId((value) => value + 1)
+    return id
   }
 
   function closeAndReset() {
     setOpen(false)
-    setQueue([])
-    resetTypeFields()
+    setDate(todayIso())
+    setPayments([emptyPayment(1)])
+    setSales([emptySale(2)])
+    setExpenses([emptyExpense(3)])
+    setNextId(4)
   }
 
-  async function handleCreateMember() {
-    setCreatingMember(true)
+  function matchMember(row: PaymentRow): number | null {
+    if (row.createdMemberId !== null) return row.createdMemberId
+    const found = members.find((member) => normalizeName(member.fullName) === normalizeName(row.memberName))
+    return found?.id ?? null
+  }
+
+  // Blank rows are skipped on save, so a section you did not use never has to
+  // be emptied first -- open the form once and fill in whatever happened today.
+  const filledPayments = payments.filter((row) => matchMember(row) !== null && row.amount && row.until)
+  const filledSales = sales.filter((row) => row.productId !== '' && row.price)
+  const filledExpenses = expenses.filter((row) => row.description.trim() && row.amount && row.categoryId !== '')
+  const totalToSave = filledPayments.length + filledSales.length + filledExpenses.length
+
+  async function handleCreateMember(row: PaymentRow) {
+    setCreatingMemberFor(row.localId)
     try {
       const response = await fetch('/api/members', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName: memberNameRaw.trim(), membershipRenewalDate: renewalUntil || todayIso() }),
+        body: JSON.stringify({ fullName: row.memberName.trim(), membershipRenewalDate: row.until || date }),
       })
       const body = await response.json().catch(() => ({}))
       if (!response.ok) {
         alert(apiError(body, t('memberSaveError')))
         return
       }
-      setLocallyAddedMembers((current) => [...current, { id: body.id, fullName: body.fullName }])
-      setResolvedMemberId(body.id)
+      setPayments((current) =>
+        current.map((entry) => (entry.localId === row.localId ? { ...entry, createdMemberId: body.id } : entry)),
+      )
+      queryClient.invalidateQueries({ queryKey: ['members'] })
     } finally {
-      setCreatingMember(false)
+      setCreatingMemberFor(null)
     }
-  }
-
-  function addSaleToQueue() {
-    const product = products?.find((item) => item.id === Number(saleProductId))
-    if (!product || !saleDate || !salePrice) return
-    setQueue((current) => [
-      ...current,
-      {
-        localId: nextLocalId,
-        type: 'sale',
-        productId: product.id,
-        productName: product.name,
-        soldAt: saleDate,
-        price: salePrice,
-        quantity: Number(saleQuantity) || 1,
-      },
-    ])
-    setNextLocalId((id) => id + 1)
-    setSaleProductId('')
-    setSalePrice('')
-    setSaleQuantity('1')
-  }
-
-  function addExpenseToQueue() {
-    if (!expenseDate || !expenseDescription || !expenseAmount || expenseCategoryId === '') return
-    setQueue((current) => [
-      ...current,
-      { localId: nextLocalId, type: 'expense', expenseDate, description: expenseDescription, amount: expenseAmount, categoryId: expenseCategoryId },
-    ])
-    setNextLocalId((id) => id + 1)
-    setExpenseDescription('')
-    setExpenseAmount('')
-    setExpenseCategoryId('')
-  }
-
-  function addMemberPaymentToQueue() {
-    if (!memberId || !paymentAmount || !renewalUntil) return
-    setQueue((current) => [
-      ...current,
-      { localId: nextLocalId, type: 'memberPayment', memberId, memberNameRaw: memberNameRaw.trim(), amount: paymentAmount, renewalUntil },
-    ])
-    setNextLocalId((id) => id + 1)
-    setMemberNameRaw('')
-    setResolvedMemberId(null)
-    setPaymentAmount('')
-    setRenewalUntil('')
-  }
-
-  function removeFromQueue(localId: number) {
-    setQueue((current) => current.filter((entry) => entry.localId !== localId))
   }
 
   async function handleSaveAll() {
     setSaving(true)
-    const failed: QueuedEntry[] = []
-    const usedYears = new Set<number>()
+    const failedPayments: PaymentRow[] = []
+    const failedSales: SaleRow[] = []
+    const failedExpenses: ExpenseRow[] = []
 
-    for (const entry of queue) {
-      try {
-        if (entry.type === 'sale') {
-          const response = await fetch('/api/store/sales', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId: entry.productId, soldAt: entry.soldAt, price: entry.price, quantity: entry.quantity }),
-          })
-          if (!response.ok) throw new Error()
-          usedYears.add(new Date(entry.soldAt).getFullYear())
-        } else if (entry.type === 'expense') {
-          const response = await fetch('/api/expenses', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              expenseDate: entry.expenseDate,
-              description: entry.description,
-              amount: entry.amount,
-              categoryId: entry.categoryId,
-            }),
-          })
-          if (!response.ok) throw new Error()
-          usedYears.add(new Date(entry.expenseDate).getFullYear())
-        } else {
-          const paymentResponse = await fetch('/api/payments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberNameRaw: entry.memberNameRaw, paidAt: todayIso(), amount: entry.amount }),
-          })
-          if (!paymentResponse.ok) throw new Error()
-          const renewalResponse = await fetch(`/api/members/${entry.memberId}`, {
+    for (const row of filledPayments) {
+      const memberId = matchMember(row)
+      const paid = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberNameRaw: row.memberName.trim(), paidAt: date, amount: row.amount }),
+      })
+      const renewed = paid.ok
+        ? await fetch(`/api/members/${memberId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ membershipRenewalDate: entry.renewalUntil }),
+            body: JSON.stringify({ membershipRenewalDate: row.until }),
           })
-          if (!renewalResponse.ok) throw new Error()
-          usedYears.add(new Date().getFullYear())
-        }
-      } catch {
-        failed.push(entry)
-      }
+        : null
+      if (!paid.ok || !renewed?.ok) failedPayments.push(row)
     }
 
-    queryClient.invalidateQueries({ queryKey: ['members'] })
-    queryClient.invalidateQueries({ queryKey: ['payments'] })
-    queryClient.invalidateQueries({ queryKey: ['store-products'] })
-    queryClient.invalidateQueries({ queryKey: ['store-sales'] })
-    queryClient.invalidateQueries({ queryKey: ['expenses'] })
-    for (const year of usedYears) {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', year] })
-      queryClient.invalidateQueries({ queryKey: ['dashboard-expenses', year] })
+    for (const row of filledSales) {
+      const response = await fetch('/api/store/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: Number(row.productId),
+          soldAt: date,
+          price: row.price,
+          quantity: Number(row.quantity) || 1,
+        }),
+      })
+      if (!response.ok) failedSales.push(row)
     }
+
+    for (const row of filledExpenses) {
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expenseDate: date,
+          description: row.description,
+          amount: row.amount,
+          categoryId: row.categoryId,
+        }),
+      })
+      if (!response.ok) failedExpenses.push(row)
+    }
+
+    const year = new Date(date).getFullYear()
+    const keys = [['members'], ['payments'], ['store-sales'], ['expenses'], ['dashboard', year], ['dashboard-expenses', year]]
+    for (const key of keys) queryClient.invalidateQueries({ queryKey: key })
 
     setSaving(false)
-    if (failed.length > 0) {
-      setQueue(failed)
-      alert(t('partialSaveError', { failed: failed.length, total: queue.length }))
+    const failed = failedPayments.length + failedSales.length + failedExpenses.length
+    if (failed > 0) {
+      // Keep only what failed, so retrying cannot save the successful rows twice.
+      setPayments(failedPayments.length > 0 ? failedPayments : [emptyPayment(takeId())])
+      setSales(failedSales.length > 0 ? failedSales : [emptySale(takeId())])
+      setExpenses(failedExpenses.length > 0 ? failedExpenses : [emptyExpense(takeId())])
+      alert(t('partialSaveError', { failed, total: totalToSave }))
       return
     }
     closeAndReset()
@@ -262,214 +213,238 @@ export function QuickAdd() {
 
   return (
     <>
-      <Button
-        onClick={() => setOpen(true)} className="w-full">
+      <Button onClick={() => setOpen(true)} className="w-full">
         {tnav('newEntry')}
       </Button>
 
       <Modal open={open} onClose={closeAndReset} title={t('title')} size="lg">
-        <div className="flex flex-col gap-4">
-          <div className="flex gap-2">
-            <Button variant={activeType === 'memberPayment' ? 'primary' : 'secondary'} onClick={() => setActiveType('memberPayment')}>
-              {t('memberPayment')}
-            </Button>
-            <Button variant={activeType === 'sale' ? 'primary' : 'secondary'} onClick={() => setActiveType('sale')}>
-              {t('sale')}
-            </Button>
-            <Button variant={activeType === 'expense' ? 'primary' : 'secondary'} onClick={() => setActiveType('expense')}>
-              {t('expense')}
-            </Button>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <label htmlFor="qa-date" className="text-sm font-medium text-muted">
+              {tc('date')}
+            </label>
+            <input
+              id="qa-date"
+              type="date"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+              className={INPUT}
+            />
+            <span className="text-sm text-muted">{t('dateAppliesToAll')}</span>
           </div>
 
-          {activeType === 'memberPayment' && (
-            <div className="flex flex-col gap-2 rounded-card border border-line p-3">
-              <Field label={t('memberNameLabel')} htmlFor="qa-member-name">
-                <input
-                  id="qa-member-name"
-                  value={memberNameRaw}
-                  onChange={(event) => {
-                    setMemberNameRaw(event.target.value)
-                    setResolvedMemberId(null)
-                  }}
-                  list="qa-member-names"
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
-                />
-                <datalist id="qa-member-names">
-                  {knownMembers.map((member) => (
-                    <option key={member.id} value={member.fullName} />
-                  ))}
-                </datalist>
-              </Field>
-              {showNewMemberPrompt && (
-                <div className="flex items-center justify-between rounded-card bg-surface-2 px-3 py-2 text-sm text-warning">
-                  <span>{t('newMemberPrompt')}</span>
-                  <Button type="button" onClick={handleCreateMember} disabled={creatingMember}>
-                    {creatingMember ? '...' : t('addMember')}
-                  </Button>
+          <section className="flex flex-col gap-2">
+            <Heading label={t('sectionPayments')} count={filledPayments.length} />
+            {payments.map((row, index) => {
+              const showAddMember = row.memberName.trim().length > 0 && matchMember(row) === null
+              return (
+                <div key={row.localId} className="flex flex-col gap-1">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-center">
+                    <input
+                      aria-label={t('memberNameLabel')}
+                      placeholder={t('memberNameLabel')}
+                      list="qa-members"
+                      value={row.memberName}
+                      onChange={(event) =>
+                        setPayments((current) =>
+                          current.map((entry) =>
+                            entry.localId === row.localId
+                              ? { ...entry, memberName: event.target.value, createdMemberId: null }
+                              : entry,
+                          ),
+                        )
+                      }
+                      className={INPUT}
+                    />
+                    <input
+                      type="number"
+                      aria-label={tc('amountRsd')}
+                      placeholder={tc('amountRsd')}
+                      value={row.amount}
+                      onChange={(event) =>
+                        setPayments((current) =>
+                          current.map((entry) =>
+                            entry.localId === row.localId ? { ...entry, amount: event.target.value } : entry,
+                          ),
+                        )
+                      }
+                      className={INPUT}
+                    />
+                    <input
+                      type="date"
+                      aria-label={t('validUntil')}
+                      value={row.until}
+                      onChange={(event) =>
+                        setPayments((current) =>
+                          current.map((entry) =>
+                            entry.localId === row.localId ? { ...entry, until: event.target.value } : entry,
+                          ),
+                        )
+                      }
+                      className={INPUT}
+                    />
+                    <RowButton
+                      isLast={index === payments.length - 1}
+                      onAdd={() => setPayments((current) => [...current, emptyPayment(takeId())])}
+                      onRemove={() => setPayments((current) => current.filter((entry) => entry.localId !== row.localId))}
+                    />
+                  </div>
+                  {showAddMember && (
+                    <div className="flex items-center gap-2 rounded-card bg-surface-2 px-3 py-1.5 text-sm text-warning">
+                      <span>{t('newMemberPrompt')}</span>
+                      <Button
+                        type="button"
+                        onClick={() => handleCreateMember(row)}
+                        disabled={creatingMemberFor === row.localId}
+                      >
+                        {creatingMemberFor === row.localId ? '...' : t('addMember')}
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-              <Field label={tc('amountRsd')} htmlFor="qa-payment-amount">
-                <input
-                  id="qa-payment-amount"
-                  type="number"
-                  value={paymentAmount}
-                  onChange={(event) => setPaymentAmount(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
-                />
-              </Field>
-              <Field label={t('validUntil')} htmlFor="qa-renewal-until">
-                <input
-                  id="qa-renewal-until"
-                  type="date"
-                  value={renewalUntil}
-                  onChange={(event) => setRenewalUntil(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
-                />
-              </Field>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={addMemberPaymentToQueue}
-                disabled={!memberId || !paymentAmount || !renewalUntil}
-              >
-                {t('addToList')}
-              </Button>
-            </div>
-          )}
+              )
+            })}
+            <datalist id="qa-members">
+              {members.map((member) => (
+                <option key={member.id} value={member.fullName} />
+              ))}
+            </datalist>
+          </section>
 
-          {activeType === 'sale' && (
-            <div className="flex flex-col gap-2 rounded-card border border-line p-3">
-              <Field label={tstore('product')} htmlFor="qa-sale-product">
+          <section className="flex flex-col gap-2">
+            <Heading label={t('sectionSales')} count={filledSales.length} />
+            {sales.map((row, index) => (
+              <div key={row.localId} className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-center">
                 <select
-                  id="qa-sale-product"
-                  value={saleProductId}
-                  onChange={(event) => setSaleProductId(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
+                  aria-label={tstore('product')}
+                  value={row.productId}
+                  onChange={(event) => {
+                    const productId = Number(event.target.value)
+                    const product = products.find((item) => item.id === productId)
+                    setSales((current) =>
+                      current.map((entry) =>
+                        entry.localId === row.localId
+                          ? {
+                              ...entry,
+                              productId,
+                              price: entry.price || (product ? String(Number(product.defaultPrice)) : ''),
+                            }
+                          : entry,
+                      ),
+                    )
+                  }}
+                  className={INPUT}
                 >
                   <option value="" disabled>
                     {t('chooseProduct')}
                   </option>
-                  {(products ?? []).map((product) => (
+                  {products.map((product) => (
                     <option key={product.id} value={product.id}>
                       {product.name}
                     </option>
                   ))}
                 </select>
-              </Field>
-              <Field label={tc('date')} htmlFor="qa-sale-date">
                 <input
-                  id="qa-sale-date"
-                  type="date"
-                  value={saleDate}
-                  onChange={(event) => setSaleDate(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
-                />
-              </Field>
-              <Field label={tc('priceRsd')} htmlFor="qa-sale-price">
-                <input
-                  id="qa-sale-price"
                   type="number"
-                  value={salePrice}
-                  onChange={(event) => setSalePrice(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
+                  aria-label={tc('priceRsd')}
+                  placeholder={tc('priceRsd')}
+                  value={row.price}
+                  onChange={(event) =>
+                    setSales((current) =>
+                      current.map((entry) =>
+                        entry.localId === row.localId ? { ...entry, price: event.target.value } : entry,
+                      ),
+                    )
+                  }
+                  className={INPUT}
                 />
-              </Field>
-              <Field label={tc('quantity')} htmlFor="qa-sale-quantity">
                 <input
-                  id="qa-sale-quantity"
                   type="number"
                   min="1"
-                  value={saleQuantity}
-                  onChange={(event) => setSaleQuantity(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
+                  aria-label={tc('quantity')}
+                  value={row.quantity}
+                  onChange={(event) =>
+                    setSales((current) =>
+                      current.map((entry) =>
+                        entry.localId === row.localId ? { ...entry, quantity: event.target.value } : entry,
+                      ),
+                    )
+                  }
+                  className={INPUT}
                 />
-              </Field>
-              <Button type="button" variant="secondary" onClick={addSaleToQueue} disabled={!saleProductId || !salePrice}>
-                {t('addToList')}
-              </Button>
-            </div>
-          )}
+                <RowButton
+                  isLast={index === sales.length - 1}
+                  onAdd={() => setSales((current) => [...current, emptySale(takeId())])}
+                  onRemove={() => setSales((current) => current.filter((entry) => entry.localId !== row.localId))}
+                />
+              </div>
+            ))}
+          </section>
 
-          {activeType === 'expense' && (
-            <div className="flex flex-col gap-2 rounded-card border border-line p-3">
-              <Field label={tc('date')} htmlFor="qa-expense-date">
+          <section className="flex flex-col gap-2">
+            <Heading label={t('sectionExpenses')} count={filledExpenses.length} />
+            {expenses.map((row, index) => (
+              <div key={row.localId} className="grid grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr_1.2fr_auto] sm:items-center">
                 <input
-                  id="qa-expense-date"
-                  type="date"
-                  value={expenseDate}
-                  onChange={(event) => setExpenseDate(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
+                  aria-label={tc('name')}
+                  placeholder={tc('name')}
+                  value={row.description}
+                  onChange={(event) =>
+                    setExpenses((current) =>
+                      current.map((entry) =>
+                        entry.localId === row.localId ? { ...entry, description: event.target.value } : entry,
+                      ),
+                    )
+                  }
+                  className={INPUT}
                 />
-              </Field>
-              <Field label={tc('name')} htmlFor="qa-expense-description">
                 <input
-                  id="qa-expense-description"
-                  value={expenseDescription}
-                  onChange={(event) => setExpenseDescription(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
-                />
-              </Field>
-              <Field label={tc('amountRsd')} htmlFor="qa-expense-amount">
-                <input
-                  id="qa-expense-amount"
                   type="number"
-                  value={expenseAmount}
-                  onChange={(event) => setExpenseAmount(event.target.value)}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
+                  aria-label={tc('amountRsd')}
+                  placeholder={tc('amountRsd')}
+                  value={row.amount}
+                  onChange={(event) =>
+                    setExpenses((current) =>
+                      current.map((entry) =>
+                        entry.localId === row.localId ? { ...entry, amount: event.target.value } : entry,
+                      ),
+                    )
+                  }
+                  className={INPUT}
                 />
-              </Field>
-              <Field label={tc('category')} htmlFor="qa-expense-category">
                 <select
-                  id="qa-expense-category"
-                  value={expenseCategoryId}
-                  onChange={(event) => setExpenseCategoryId(Number(event.target.value))}
-                  className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
+                  aria-label={tc('category')}
+                  value={row.categoryId}
+                  onChange={(event) =>
+                    setExpenses((current) =>
+                      current.map((entry) =>
+                        entry.localId === row.localId ? { ...entry, categoryId: Number(event.target.value) } : entry,
+                      ),
+                    )
+                  }
+                  className={INPUT}
                 >
                   <option value="" disabled>
                     {tc('category')}
                   </option>
-                  {categories.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {labelById(option.id)}
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {labelById(category.id)}
                     </option>
                   ))}
                 </select>
-              </Field>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={addExpenseToQueue}
-                disabled={!expenseDescription || !expenseAmount}
-              >
-                {t('addToList')}
-              </Button>
-            </div>
-          )}
+                <RowButton
+                  isLast={index === expenses.length - 1}
+                  onAdd={() => setExpenses((current) => [...current, emptyExpense(takeId())])}
+                  onRemove={() => setExpenses((current) => current.filter((entry) => entry.localId !== row.localId))}
+                />
+              </div>
+            ))}
+          </section>
 
-          {queue.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold text-muted">{t('queueTitle', { count: queue.length })}</h3>
-              {queue.map((entry) => (
-                <div
-                  key={entry.localId}
-                  className="flex items-center justify-between rounded-card border border-line px-3 py-2 text-sm text-fg"
-                >
-                  <span>{summarize(entry, t)}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeFromQueue(entry.localId)}
-                    className="text-muted hover:text-fg"
-                    aria-label={tc('remove')}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              <Button onClick={handleSaveAll} disabled={saving}>
-                {saving ? tc('saving') : t('saveAll')}
-              </Button>
-            </div>
-          )}
+          <Button onClick={handleSaveAll} disabled={saving || totalToSave === 0} className="w-full">
+            {saving ? tc('saving') : t('saveAllCount', { count: totalToSave })}
+          </Button>
         </div>
       </Modal>
     </>

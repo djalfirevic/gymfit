@@ -43,8 +43,10 @@ export default function StorePage() {
   const { data: sales, isLoading: salesLoading } = useQuery({ queryKey: ['store-sales'], queryFn: fetchSales })
 
   const [productModalOpen, setProductModalOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [productName, setProductName] = useState('')
   const [productPrice, setProductPrice] = useState('')
+  const [productActive, setProductActive] = useState(true)
 
   const [saleModalOpen, setSaleModalOpen] = useState(false)
   const [saleRows, setSaleRows] = useState<SaleRow[]>([emptySaleRow(1)])
@@ -71,21 +73,45 @@ export default function StorePage() {
     return new Map([...latest].map(([id, entry]) => [id, entry.price]))
   }, [sales])
 
-  async function handleCreateProduct(event: React.FormEvent) {
+  function openCreateProduct() {
+    setEditingProduct(null)
+    setProductName('')
+    setProductPrice('')
+    setProductActive(true)
+    setProductModalOpen(true)
+  }
+
+  function openEditProduct(product: Product) {
+    setEditingProduct(product)
+    setProductName(product.name)
+    setProductPrice(String(Number(product.defaultPrice)))
+    setProductActive(product.active)
+    setProductModalOpen(true)
+  }
+
+  async function handleSaveProduct(event: React.FormEvent) {
     event.preventDefault()
-    const response = await fetch('/api/store/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: productName, defaultPrice: productPrice }),
-    })
+    // The price here is only what new sales start from. Sales already recorded
+    // keep the price they were sold at, so correcting this never rewrites
+    // history or moves any past total.
+    const payload = { name: productName, defaultPrice: productPrice, active: productActive }
+    const response = editingProduct
+      ? await fetch(`/api/store/products/${editingProduct.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      : await fetch('/api/store/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: productName, defaultPrice: productPrice }),
+        })
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
       alert(apiError(body, t('productSaveError')))
       return
     }
     setProductModalOpen(false)
-    setProductName('')
-    setProductPrice('')
     queryClient.invalidateQueries({ queryKey: ['store-products'] })
   }
 
@@ -187,14 +213,23 @@ export default function StorePage() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-md font-semibold text-heading">{t('products')}</h2>
-          <Button onClick={() => setProductModalOpen(true)}>{t('newProduct')}</Button>
+          <Button onClick={openCreateProduct}>{t('newProduct')}</Button>
         </div>
         <Table<Product>
           rows={products ?? []}
           columns={[
             { key: 'name', label: tc('name'), render: (row) => row.name },
-            { key: 'price', label: tc('price'), render: (row) => fmt.rsd(Number(row.defaultPrice)) },
+            { key: 'price', label: t('currentPrice'), render: (row) => fmt.rsd(Number(row.defaultPrice)) },
             { key: 'active', label: t('active'), render: (row) => (row.active ? tc('yes') : tc('no')) },
+            {
+              key: 'actions',
+              label: '',
+              render: (row) => (
+                <Button variant="secondary" onClick={() => openEditProduct(row)}>
+                  {tc('edit')}
+                </Button>
+              ),
+            },
           ]}
         />
       </div>
@@ -230,8 +265,8 @@ export default function StorePage() {
         <Pagination page={salesPage} totalPages={salesTotalPages} onPageChange={setSalesPage} />
       </div>
 
-      <Modal open={productModalOpen} onClose={() => setProductModalOpen(false)} title={t('newProductTitle')}>
-        <form onSubmit={handleCreateProduct}>
+      <Modal open={productModalOpen} onClose={() => setProductModalOpen(false)} title={editingProduct ? t('editProductTitle') : t('newProductTitle')}>
+        <form onSubmit={handleSaveProduct}>
           <Field label={tc('name')} htmlFor="productName">
             <input
               id="productName"
@@ -251,6 +286,20 @@ export default function StorePage() {
               required
             />
           </Field>
+          <p className="mb-3 text-sm text-muted">{t('priceIsCurrentOnly')}</p>
+          {editingProduct && (
+            <Field label={t('active')} htmlFor="productActive">
+              <select
+                id="productActive"
+                value={productActive ? 'yes' : 'no'}
+                onChange={(event) => setProductActive(event.target.value === 'yes')}
+                className="w-full rounded-card border border-line bg-surface px-3 py-2 text-fg"
+              >
+                <option value="yes">{tc('yes')}</option>
+                <option value="no">{tc('no')}</option>
+              </select>
+            </Field>
+          )}
           <Button type="submit" className="w-full">
             {tc('save')}
           </Button>
