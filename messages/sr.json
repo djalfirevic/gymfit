@@ -161,7 +161,11 @@
     "searchPlaceholder": "Pretraga po proizvodu...",
     "salesByProductAndMonth": "Prodaja po proizvodu i mesecu ({year})",
     "productSaveError": "Greška pri čuvanju proizvoda",
-    "saleSaveError": "Greška pri čuvanju prodaje"
+    "saleSaveError": "Greška pri čuvanju prodaje",
+    "chooseProduct": "Izaberi proizvod",
+    "addRow": "Dodaj red",
+    "removeRow": "Ukloni red",
+    "salePartialSaveError": "{failed} od {total} prodaja nije sačuvano. Ostale su u formi — pokušajte ponovo."
   },
   "expenses": {
     "title": "Troškovi",

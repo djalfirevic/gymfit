@@ -161,7 +161,11 @@
     "searchPlaceholder": "Search by product...",
     "salesByProductAndMonth": "Sales by product and month ({year})",
     "productSaveError": "Could not save the product",
-    "saleSaveError": "Could not save the sale"
+    "saleSaveError": "Could not save the sale",
+    "chooseProduct": "Choose a product",
+    "addRow": "Add row",
+    "removeRow": "Remove row",
+    "salePartialSaveError": "{failed} of {total} sales were not saved. They are still in the form — try again."
   },
   "expenses": {
     "title": "Expenses",
