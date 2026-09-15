@@ -32,8 +32,9 @@ export function computeYearlyEurTotals(
   // (SUM(Zarada column) / rate); a table before this fix used Stanje here,
   // which understated the figure by roughly the year's total expenses.
   //
-  // Rent is then subtracted proportionally: the gross figure carries the whole
-  // rent, one partner's share carries half of it.
+  // Rent is then subtracted: the gross figure always carries the whole rent,
+  // while the split carries only what this partner actually paid — nothing in
+  // the years the other one covered it alone.
   const zaradaSum = rows.reduce((sum, row) => sum + row.zarada, 0)
   const podelaSum = rows.reduce((sum, row) => sum + row.podela, 0)
   return {

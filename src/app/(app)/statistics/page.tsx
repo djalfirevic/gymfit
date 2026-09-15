@@ -144,7 +144,7 @@ export default function StatisticsPage() {
           <StatCard
             label={`${t('kirija')} (${year})`}
             value={fmt.eur(dashboard.yearlyTotals.kirijaEur)}
-            hint={fmt.eur(dashboard.yearlyTotals.kirijaShareEur)}
+            hint={dashboard.yearlyTotals.kirijaShareEur > 0 ? fmt.eur(dashboard.yearlyTotals.kirijaShareEur) : undefined}
           />
           <StatCard label={`${t('totalEarnings')} (${year})`} value={fmt.eur(dashboard.yearlyTotals.ukupnaZaradaEur)} />
           <StatCard label={`${t('zarada')} (${year})`} value={fmt.eur(dashboard.yearlyTotals.zaradaEur)} />
