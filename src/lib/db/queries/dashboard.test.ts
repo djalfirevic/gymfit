@@ -44,13 +44,13 @@ describe('computeYearlyEurTotals', () => {
 })
 
 describe('annualRentEur', () => {
-  it('charges nothing before the rent started', () => {
-    expect(annualRentEur(2024)).toEqual({ total: 0, share: 0 })
-    expect(annualRentEur(2025)).toEqual({ total: 0, share: 0 })
+  it('charges nothing before the first reported year', () => {
+    expect(annualRentEur(2023)).toEqual({ total: 0, share: 0 })
   })
 
-  it('charges 12 months from 2026 onward — 1150/month per partner, twice that in total', () => {
-    expect(annualRentEur(2026)).toEqual({ total: 27600, share: 13800 })
-    expect(annualRentEur(2027)).toEqual({ total: 27600, share: 13800 })
+  it('charges 12 months of 2300 from 2024 on, halved between the two partners', () => {
+    for (const year of [2024, 2025, 2026, 2027]) {
+      expect(annualRentEur(year)).toEqual({ total: 27600, share: 13800 })
+    }
   })
 })

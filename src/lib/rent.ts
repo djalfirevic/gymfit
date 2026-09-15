@@ -4,14 +4,14 @@
 // gross. So it is applied to the yearly EUR totals only.
 //
 // The rent is 2300 EUR/month and the two partners split it down the middle, so
-// one share is 1150/month — 13800 over a year. Rent started in 2026; 2024 and
-// 2025 had none and must keep reporting none.
+// one share is 1150/month — 13800 over a year. It runs across every year the
+// app reports on, 2024 included.
 //
 // This lives outside `queries/dashboard.ts` so the Excel export can share it:
 // that module is `server-only`, and importing it into the workbook builder
 // would break the workbook's tests.
 export const MONTHLY_RENT_EUR = 2300
-export const RENT_FROM_YEAR = 2026
+export const RENT_FROM_YEAR = 2024
 
 export type AnnualRent = { total: number; share: number }
 

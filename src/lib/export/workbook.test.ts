@@ -83,11 +83,19 @@ describe('buildWorkbook', () => {
     expect(workbook.getWorksheet('2026')!.getCell('S5').value).toBe(27600)
   })
 
-  it('subtracts no rent from years before it started', () => {
+  it('subtracts the rent from every reported year', () => {
     const workbook = buildWorkbook({ ...DATA, rsdToEurRate: 120 })
-    expect(formulaOf(workbook, '2025', 'S3')).toBe('SUM(C2:C13) / 120')
-    expect(formulaOf(workbook, '2025', 'S4')).toBe('SUM(F2:F13) / 120')
-    expect(workbook.getWorksheet('2025')!.getCell('S5').value).toBe(0)
+    for (const year of ['2024', '2025', '2026']) {
+      expect(formulaOf(workbook, year, 'S3')).toBe('SUM(C2:C13) / 120 - 27600')
+      expect(formulaOf(workbook, year, 'S4')).toBe('SUM(F2:F13) / 120 - 13800')
+      expect(workbook.getWorksheet(year)!.getCell('S5').value).toBe(27600)
+    }
+  })
+
+  it('subtracts no rent from a year before the rent ran', () => {
+    const workbook = buildWorkbook({ ...DATA, years: [2023], rsdToEurRate: 120 })
+    expect(formulaOf(workbook, '2023', 'S3')).toBe('SUM(C2:C13) / 120')
+    expect(workbook.getWorksheet('2023')!.getCell('S5').value).toBe(0)
   })
 
   it('sums the investment totals across every exported year', () => {
