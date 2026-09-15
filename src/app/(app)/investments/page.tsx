@@ -17,7 +17,7 @@ type InvestmentsResponse = { entries: CapitalInvestment[]; totalInvestedEur: num
 
 type DashboardResponse = {
   rollup: { month: number; zarada: number; troskovi: number; stanje: number; podela: number }[]
-  yearlyTotals: { ukupnaZaradaEur: number; zaradaEur: number }
+  yearlyTotals: { ukupnaZaradaEur: number; zaradaEur: number; kirijaEur: number; kirijaShareEur: number }
 }
 
 async function fetchInvestments(): Promise<InvestmentsResponse> {

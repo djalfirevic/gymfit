@@ -2,9 +2,17 @@ import 'server-only'
 import { sql } from 'drizzle-orm'
 import { db } from '@/lib/db/client'
 import { expenses, payments, storeSales } from '@/lib/db/schema'
+import { type AnnualRent, annualRentEur } from '@/lib/rent'
 import { getExchangeRate } from './settings'
 
 export type MonthlyRollup = { month: number; zarada: number; troskovi: number; stanje: number; podela: number }
+
+export type YearlyEurTotals = {
+  ukupnaZaradaEur: number
+  zaradaEur: number
+  kirijaEur: number
+  kirijaShareEur: number
+}
 
 export function computeMonthRollup(zarada: number, troskovi: number): { stanje: number; podela: number } {
   const stanje = zarada - troskovi
@@ -14,7 +22,8 @@ export function computeMonthRollup(zarada: number, troskovi: number): { stanje: 
 export function computeYearlyEurTotals(
   rows: { zarada: number; podela: number }[],
   rate: number,
-): { ukupnaZaradaEur: number; zaradaEur: number } {
+  rent: AnnualRent = { total: 0, share: 0 },
+): YearlyEurTotals {
   if (!(rate > 0)) {
     throw new Error(`Invalid RSD→EUR rate: ${rate}`)
   }
@@ -22,9 +31,17 @@ export function computeYearlyEurTotals(
   // expenses Stanje. Confirmed against the source spreadsheet's own formula
   // (SUM(Zarada column) / rate); a table before this fix used Stanje here,
   // which understated the figure by roughly the year's total expenses.
+  //
+  // Rent is then subtracted proportionally: the gross figure carries the whole
+  // rent, one partner's share carries half of it.
   const zaradaSum = rows.reduce((sum, row) => sum + row.zarada, 0)
   const podelaSum = rows.reduce((sum, row) => sum + row.podela, 0)
-  return { ukupnaZaradaEur: zaradaSum / rate, zaradaEur: podelaSum / rate }
+  return {
+    ukupnaZaradaEur: zaradaSum / rate - rent.total,
+    zaradaEur: podelaSum / rate - rent.share,
+    kirijaEur: rent.total,
+    kirijaShareEur: rent.share,
+  }
 }
 
 async function monthlyIncome(year: number): Promise<Map<number, number>> {
@@ -74,8 +91,8 @@ export async function monthlyRollup(year: number): Promise<MonthlyRollup[]> {
   return result
 }
 
-export async function yearlyTotalsEur(year: number): Promise<{ ukupnaZaradaEur: number; zaradaEur: number }> {
+export async function yearlyTotalsEur(year: number): Promise<YearlyEurTotals> {
   const rows = await monthlyRollup(year)
   const rate = await getExchangeRate()
-  return computeYearlyEurTotals(rows, rate)
+  return computeYearlyEurTotals(rows, rate, annualRentEur(year))
 }

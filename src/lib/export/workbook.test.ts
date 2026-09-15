@@ -76,10 +76,18 @@ describe('buildWorkbook', () => {
     expect(formulaOf(workbook, '2026', 'N2')).toContain('"Čokoladica"')
   })
 
-  it('derives the yearly EUR totals from the configured rate', () => {
+  it('derives the yearly EUR totals from the configured rate, net of rent', () => {
     const workbook = buildWorkbook({ ...DATA, rsdToEurRate: 120 })
-    expect(formulaOf(workbook, '2026', 'S3')).toBe('SUM(C2:C13) / 120')
-    expect(formulaOf(workbook, '2026', 'S4')).toBe('SUM(F2:F13) / 120')
+    expect(formulaOf(workbook, '2026', 'S3')).toBe('SUM(C2:C13) / 120 - 27600')
+    expect(formulaOf(workbook, '2026', 'S4')).toBe('SUM(F2:F13) / 120 - 13800')
+    expect(workbook.getWorksheet('2026')!.getCell('S5').value).toBe(27600)
+  })
+
+  it('subtracts no rent from years before it started', () => {
+    const workbook = buildWorkbook({ ...DATA, rsdToEurRate: 120 })
+    expect(formulaOf(workbook, '2025', 'S3')).toBe('SUM(C2:C13) / 120')
+    expect(formulaOf(workbook, '2025', 'S4')).toBe('SUM(F2:F13) / 120')
+    expect(workbook.getWorksheet('2025')!.getCell('S5').value).toBe(0)
   })
 
   it('sums the investment totals across every exported year', () => {

@@ -14,7 +14,7 @@ type DashboardResponse = {
   year: number
   memberCounts: { active: number; notRenewed: number; total: number }
   rollup: { month: number; zarada: number; troskovi: number; stanje: number; podela: number }[]
-  yearlyTotals: { ukupnaZaradaEur: number; zaradaEur: number }
+  yearlyTotals: { ukupnaZaradaEur: number; zaradaEur: number; kirijaEur: number; kirijaShareEur: number }
 }
 
 type Product = { id: number; name: string }
@@ -141,6 +141,11 @@ export default function StatisticsPage() {
           <StatCard label="Pre-workout" value={String(countByProduct.get('Pre-workout') ?? 0)} />
           <StatCard label={t('dnevnica')} value={String(dnevnicaCount)} />
           <StatCard label={t('ciscenje')} value={String(ciscenjeCount)} />
+          <StatCard
+            label={`${t('kirija')} (${year})`}
+            value={fmt.eur(dashboard.yearlyTotals.kirijaEur)}
+            hint={fmt.eur(dashboard.yearlyTotals.kirijaShareEur)}
+          />
           <StatCard label={`${t('totalEarnings')} (${year})`} value={fmt.eur(dashboard.yearlyTotals.ukupnaZaradaEur)} />
           <StatCard label={`${t('zarada')} (${year})`} value={fmt.eur(dashboard.yearlyTotals.zaradaEur)} />
         </div>

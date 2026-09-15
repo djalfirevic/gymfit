@@ -124,7 +124,8 @@
     "active": "Aktivni",
     "dnevnica": "Dnevnica",
     "ciscenje": "Čišćenje",
-    "totalEarnings": "Ukupna zarada"
+    "totalEarnings": "Ukupna zarada",
+    "kirija": "Kirija"
   },
   "members": {
     "title": "Članovi",

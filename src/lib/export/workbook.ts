@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs'
+import { annualRentEur } from '@/lib/rent'
 
 export type ExportData = {
   members: { fullName: string; membershipRenewalDate: Date }[]
@@ -200,12 +201,20 @@ function addYearSheet(
     formula: `COUNTIFS(Expenses!B:B, "Čišćenje", Expenses!A:A, ">="&${yearStart}, Expenses!A:A, "<="&${yearEnd})`,
   }
 
+  // Rent is subtracted here rather than carried as expense rows, matching the
+  // app: the whole rent comes off the gross figure, one partner's half off the
+  // split. Years before the rent started subtract nothing.
+  const rent = annualRentEur(year)
+  const less = (amount: number) => (amount > 0 ? ` - ${amount}` : '')
   sheet.getCell('R3').value = 'Ukupna zarada:'
-  sheet.getCell('S3').value = { formula: `SUM(C2:C13) / ${rate}` }
+  sheet.getCell('S3').value = { formula: `SUM(C2:C13) / ${rate}${less(rent.total)}` }
   sheet.getCell('R4').value = 'Zarada:'
-  sheet.getCell('S4').value = { formula: `SUM(F2:F13) / ${rate}` }
-  sheet.getCell('S3').numFmt = '#,##0.00'
-  sheet.getCell('S4').numFmt = '#,##0.00'
+  sheet.getCell('S4').value = { formula: `SUM(F2:F13) / ${rate}${less(rent.share)}` }
+  sheet.getCell('R5').value = 'Kirija:'
+  sheet.getCell('S5').value = rent.total
+  for (const cell of ['S3', 'S4', 'S5']) {
+    sheet.getCell(cell).numFmt = '#,##0.00'
+  }
 }
 
 /** The blank tally form kept for printing -- paper, not data, so it is

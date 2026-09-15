@@ -124,7 +124,8 @@
     "active": "Active",
     "dnevnica": "Daily allowance",
     "ciscenje": "Cleaning",
-    "totalEarnings": "Total income"
+    "totalEarnings": "Total income",
+    "kirija": "Rent"
   },
   "members": {
     "title": "Members",
